@@ -151,7 +151,7 @@ for (const name of remoteReposKeys) {
       for (const b of branchs) {
         try {
           await $`git fetch ${b.remote} ${b.branch}`;
-        } catch (err) {
+        } catch (p) {
           console.log(`Error: ${p.stderr || p}`);
         }
       }
