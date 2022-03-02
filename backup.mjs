@@ -131,6 +131,7 @@ for (const name of remoteReposKeys) {
         await $`git clone ${repo.ssh_url}`;
       } else if (clone === 'n') {
         remoteRepos[name].ignore = true
+        continue
       }
     }
   }
