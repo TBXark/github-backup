@@ -135,12 +135,16 @@ for (const name of remoteReposKeys) {
     .stdout
     .split("\n")
     .map((r) => r.replace(/^ */, ""))
-    .filter((r) => !r.startsWith("origin/HEAD") && r.length > 0)
+    .filter((r) => (r.indexOf('->') < 0)  && (r.length > 0))
     .map((r) => r.split("/"));
 
   for (const b of branchs) {
     const [remote, ...branch] = b;
-    await $`git pull ${remote} ${branch.join('/')}`;
+    try {
+      await $`git pull ${remote} ${branch.join('/')}`;
+    } catch (p) {
+      console.log(`Error: ${p.stderr}`)
+    }
   }
   cd(targetDir)
 }
