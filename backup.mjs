@@ -114,6 +114,11 @@ for (const name of remoteReposKeys) {
   const path = `./${name}`;
   const repo = remoteRepos[name];
 
+  if (config.repos[name] && config.repos[name].ignore) {
+    remoteRepos[name].ignore = true
+    continue
+  }
+
   // clone if not exist
   if (!fs.pathExistsSync(path)) {
     if (cloneAll) {
@@ -124,6 +129,8 @@ for (const name of remoteReposKeys) {
       });
       if (clone === "y") {
         await $`git clone ${repo.ssh_url}`;
+      } else if (clone === 'n') {
+        remoteRepos[name].ignore = true
       }
     }
   }
