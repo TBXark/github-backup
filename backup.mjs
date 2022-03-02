@@ -75,10 +75,10 @@ function parseArgs() {
 const args = parseArgs();
 
 // repos store directory
-let targetDir = await quiet($`pwd`);
-targetDir = targetDir.stdout;
+// let targetDir = await quiet($`pwd`);
+// targetDir = targetDir.stdout.toString();
 if (args["target"]) {
-  targetDir = args["target"];
+  // targetDir = args["target"];
   cd(args["target"]);
 }
 
@@ -114,9 +114,10 @@ for (const name of remoteReposKeys) {
   const path = `./${name}`;
   const repo = remoteRepos[name];
 
+  // ignore repo
   if (config.repos[name] && config.repos[name].ignore) {
-    remoteRepos[name].ignore = true
-    continue
+    remoteRepos[name].ignore = true;
+    continue;
   }
 
   // clone if not exist
@@ -129,32 +130,35 @@ for (const name of remoteReposKeys) {
       });
       if (clone === "y") {
         await $`git clone ${repo.ssh_url}`;
-      } else if (clone === 'n') {
-        remoteRepos[name].ignore = true
-        continue
+      } else if (clone === "n") {
+        remoteRepos[name].ignore = true;
+        continue;
       }
     }
   }
 
   // pull all branch
   cd(path);
-  let branchs = await quiet($`git branch -r`);
-  branchs = branchs
-    .stdout
-    .split("\n")
-    .map((r) => r.replace(/^ */, ""))
-    .filter((r) => (r.indexOf('->') < 0)  && (r.length > 0))
-    .map((r) => r.split("/"));
+  try {
+    let branchs = await quiet($`git branch -r`);
+    branchs = branchs.stdout
+      .split("\n")
+      .map((r) => r.replace(/^ */, ""))
+      .filter((r) => r.indexOf("->") < 0 && r.length > 0)
+      .map((r) => r.split("/"));
 
-  for (const b of branchs) {
-    const [remote, ...branch] = b;
-    try {
-      await $`git pull ${remote} ${branch.join('/')}`;
-    } catch (p) {
-      console.log(`Error: ${p.stderr}`)
+    for (const b of branchs) {
+      const [remote, ...branch] = b;
+      try {
+        await $`git pull ${remote} ${branch.join("/")}`;
+      } catch (p) {
+        console.log(`Error: ${p.stderr}`);
+      }
     }
+  } catch (p) {
+    console.log(`Error: ${p.stderr}`);
   }
-  cd(targetDir)
+  cd("..");
 }
 
 // update config
