@@ -72,7 +72,7 @@ function parseArgs() {
   return res;
 }
 
-const args = parseArgs(process.argv);
+const args = parseArgs();
 
 // repos store directory
 let targetDir = await quiet($`pwd`);
