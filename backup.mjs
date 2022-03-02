@@ -66,13 +66,6 @@ async function fetchRepos(username, token) {
   return store;
 }
 
-function updateRepos(config, remoteRepos) {
-  const localReposKeys = Object.keys(config.repos);
-  config.repos = remoteRepos;
-  return Object.keys(remoteRepos).filter(
-    (r) => !localReposKeys.includes(r.name)
-  );
-}
 
 function configPath() {
   let path = process.argv
@@ -90,9 +83,10 @@ let config = await loadConfig(cPath);
 const cloneAll = process.argv.indexOf("--clone=all") >= 0;
 const remoteRepos = await fetchRepos(config.username, config.token);
 
-// console.log(Object.keys(remoteRepos).join('\n'))
+const localReposKeys = Object.keys(config.repos);
+const remoteReposKeys = Object.keys(remoteRepos);
 
-for (const name of updateRepos(config, remoteRepos)) {
+for (const name of localReposKeys.filter(r => !remoteReposKeys.includes(r))) {
   const path = `./${name}`;
   if (fs.pathExistsSync(path)) {
     const del = await question(`Delete ${path}? (y/n): `, {
@@ -104,7 +98,7 @@ for (const name of updateRepos(config, remoteRepos)) {
   }
 }
 
-for (const name of Object.keys(config.repos)) {
+for (const name of remoteReposKeys) {
   const path = `./${name}`;
   const repo = remoteRepos[name];
   if (fs.pathExistsSync(path)) {
@@ -123,4 +117,5 @@ for (const name of Object.keys(config.repos)) {
   }
 }
 
+config.repos = remoteRepos;
 await fs.writeFile(cPath, JSON.stringify(config, null, 2));
