@@ -24,13 +24,10 @@ async function fetchRepos(username, token) {
   let page = 0;
 
   while (true) {
-    let response = await fetch(
-      `https://api.github.com/search/repositories?q=user%3Atbxark&page=${page}`,
-      {
+    let response = await fetch(`https://api.github.com/search/repositories?q=user%3Atbxark&page=${page}`, {
         method: "GET",
         headers: { Authorization: `token ${token}` },
-      }
-    );
+    });
     response = await response.json();
     const total = response.total_count;
     response = response.items.map((ele) => {
@@ -81,7 +78,6 @@ if (args["target"]) {
   // targetDir = args["target"];
   cd(args["target"]);
 }
-
 
 // load config
 let cPath = args["config"] || "./.github_backup_config.json";
@@ -148,17 +144,17 @@ for (const name of remoteReposKeys) {
       .map((r) => r.split("/"))
       .map((r) => {
         const [remote, ...branch] = r;
-        return branch.join("/")
+        return branch.join("/");
       })
       .map((r) => `${r}:${r}`)
-      .join(' ');
+      .join(" ");
 
     if (branchs.length == 0) {
       continue;
     }
-    await $`git checkout --quiet --detach HEAD`
-    await $`git fetch origin ${branchs}`
-    await $`git checkout --quiet -`
+    await $`git checkout --quiet --detach HEAD`;
+    await $`git fetch origin ${branchs}`;
+    await $`git checkout --quiet -`;
   } catch (p) {
     console.log(`Error: ${p.stderr || p}`);
     break;
