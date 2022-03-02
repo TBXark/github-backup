@@ -1,5 +1,6 @@
 #!/usr/bin/env zx
 
+// import "zx/globals";
 
 async function loadConfig(path) {
   let content = {};
@@ -31,7 +32,7 @@ async function fetchRepos(username, token) {
       }
     );
     response = await response.json();
-    const total = response.total_count
+    const total = response.total_count;
     response = response.items.map((ele) => {
       return {
         name: ele.name,
@@ -62,36 +63,42 @@ async function fetchRepos(username, token) {
   return store;
 }
 
-
 function parseArgs() {
-  let res = {}
-  for (const c of process.argv.filter(arg => arg.startsWith('--'))) {
-      const [key, ...value] = c.split('=')
-      res[key.replace('--', '')] = value.join('=')
+  let res = {};
+  for (const c of process.argv.filter((arg) => arg.startsWith("--"))) {
+    const [key, ...value] = c.split("=");
+    res[key.replace("--", "")] = value.join("=");
   }
-  return res
+  return res;
 }
 
+const args = parseArgs(process.argv);
 
-const args = parseArgs(process.argv)
-
-console.log(args)
-
-if (args['target']) {
-  cd(args['target'])
+// repos store directory
+let targetDir = await $`pwd`;
+targetDir = targetDir.stdout;
+if (args["target"]) {
+  targetDir = args["target"];
+  cd(args["target"]);
 }
 
-await $`pwd`;
+// config path
+let cPath = args["config"] || "./.github_backup_config.json";
 
-let cPath = args['config'] || './.github_backup_config.json';
+// load config
 let config = await loadConfig(cPath);
-const cloneAll = args['clone'] === 'all';
+
+// clone without question
+const cloneAll = args["clone"] === "all";
+
+// fetch repos
 const remoteRepos = await fetchRepos(config.username, config.token);
 
 const localReposKeys = Object.keys(config.repos);
 const remoteReposKeys = Object.keys(remoteRepos);
 
-for (const name of localReposKeys.filter(r => !remoteReposKeys.includes(r))) {
+// delete repos
+for (const name of localReposKeys.filter((r) => !remoteReposKeys.includes(r))) {
   const path = `./${name}`;
   if (fs.pathExistsSync(path)) {
     const del = await question(`Delete ${path}? (y/n): `, {
@@ -103,24 +110,42 @@ for (const name of localReposKeys.filter(r => !remoteReposKeys.includes(r))) {
   }
 }
 
+// update repos
 for (const name of remoteReposKeys) {
   const path = `./${name}`;
   const repo = remoteRepos[name];
-  if (fs.pathExistsSync(path)) {
-    await $`cd ${path} && git pull`;
-  } else {
+
+  // clone if not exist
+  if (!fs.pathExistsSync(path)) {
     if (cloneAll) {
       await $`git clone ${repo.ssh_url}`;
-      continue;
-    }
-    const clone = await question(`Clone ${repo.ssh_url}? (y/n): `, {
-      choices: ["y", "n"],
-    });
-    if (clone === "y") {
-      await $`git clone ${repo.ssh_url}`;
+    } else {
+      const clone = await question(`Clone ${repo.ssh_url}? (y/n): `, {
+        choices: ["y", "n"],
+      });
+      if (clone === "y") {
+        await $`git clone ${repo.ssh_url}`;
+      }
     }
   }
+
+  // pull all branch
+  cd(path);
+  let branchs = await $`git branch -r`;
+  branchs = branchs
+    .toString()
+    .split("\n")
+    .map((r) => r.replace(/^ */, ""))
+    .filter((r) => !r.startsWith("origin/HEAD") && r.length > 0)
+    .map((r) => r.split("/"));
+
+  for (const b of branchs) {
+    const [remote, branch] = b;
+    await $`git pull ${remote} ${branch}`;
+  }
+  cd(targetDir)
 }
 
+// update config
 config.repos = remoteRepos;
 await fs.writeFile(cPath, JSON.stringify(config, null, 2));
