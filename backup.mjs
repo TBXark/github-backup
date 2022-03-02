@@ -144,13 +144,13 @@ for (const name of remoteReposKeys) {
       .map((r) => r.split("/"))
       .map((r) => {
         const [remote, ...branch] = r;
-        return branch.join("/");
-      })
-      .map((r) => `${r}:${r}`)
-      .join(" ");
+        return { remote, branch: branch.join("/") };
+      });
     if (branchs.length > 0) {
       await $`git checkout --quiet --detach HEAD`;
-      await $`git fetch origin ${branchs}`;
+      for (const b of branchs) {
+        await $`git fetch ${b.remote} ${b.branch}`;
+      }
       await $`git checkout --quiet -`;
     }
   } catch (p) {
