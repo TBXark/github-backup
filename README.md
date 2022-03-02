@@ -25,7 +25,7 @@ chmod +x backup.mjs
 
 
 
-#### 碎碎念
+### 碎碎念
 
 最近看得到v2ex上有人github账户被封，俄罗斯也被米国盟友各种制裁。感觉把所有代码放在Github上不备份其实不太安全。
 现有其他git平台不能实时同步github的仓库。得在每个github的repo添加action去同步，过于麻烦。
