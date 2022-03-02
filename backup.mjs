@@ -1,9 +1,5 @@
 #!/usr/bin/env zx
 
-//import "zx/globals";
-
-await $`git --version`;
-await $`pwd`;
 
 async function loadConfig(path) {
   let content = {};
@@ -67,20 +63,29 @@ async function fetchRepos(username, token) {
 }
 
 
-function configPath() {
-  let path = process.argv
-    .filter((x) => x.startsWith("--path="))
-    .map((x) => x.replace("--path=", ""));
-  if (path.length == 0) {
-    return "./.github_backup_config.json";
-  } else {
-    return path[0];
+function parseArgs() {
+  let res = {}
+  for (const c of process.argv.filter(arg => arg.startsWith('--'))) {
+      const [key, ...value] = c.split('=')
+      res[key.replace('--', '')] = value.join('=')
   }
+  return res
 }
 
-let cPath = configPath();
+
+const args = parseArgs(process.argv)
+
+console.log(args)
+
+if (args['target']) {
+  cd(args['target'])
+}
+
+await $`pwd`;
+
+let cPath = args['config'] || './.github_backup_config.json';
 let config = await loadConfig(cPath);
-const cloneAll = process.argv.indexOf("--clone=all") >= 0;
+const cloneAll = args['clone'] === 'all';
 const remoteRepos = await fetchRepos(config.username, config.token);
 
 const localReposKeys = Object.keys(config.repos);

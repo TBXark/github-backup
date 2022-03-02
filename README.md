@@ -20,7 +20,7 @@ chmod +x backup.mjs
 
 #or
 
-./backup.mjs --path=./you_config_path.json
+./backup.mjs --config=./you_config_path.json --target=./repos_save_path
 ```
 
 
