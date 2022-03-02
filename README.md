@@ -15,7 +15,7 @@ chmod +x backup.mjs
 
 ### Usage
 
-```
+```shell
 ./backup.mjs
 
 #or
