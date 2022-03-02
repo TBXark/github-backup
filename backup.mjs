@@ -149,7 +149,11 @@ for (const name of remoteReposKeys) {
     if (branchs.length > 0) {
       await $`git checkout --quiet --detach HEAD`;
       for (const b of branchs) {
-        await $`git fetch ${b.remote} ${b.branch}`;
+        try {
+          await $`git fetch ${b.remote} ${b.branch}`;
+        } catch (err) {
+          console.log(`Error: ${p.stderr || p}`);
+        }
       }
       await $`git checkout --quiet -`;
     }
