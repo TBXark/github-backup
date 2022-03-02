@@ -75,7 +75,7 @@ function parseArgs() {
 const args = parseArgs(process.argv);
 
 // repos store directory
-let targetDir = await $`pwd`;
+let targetDir = await quite($`pwd`);
 targetDir = targetDir.stdout;
 if (args["target"]) {
   targetDir = args["target"];
@@ -130,7 +130,7 @@ for (const name of remoteReposKeys) {
 
   // pull all branch
   cd(path);
-  let branchs = await $`git branch -r`;
+  let branchs = await quiet($`git branch -r`);
   branchs = branchs
     .stdout
     .split("\n")
