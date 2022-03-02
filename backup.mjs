@@ -133,7 +133,7 @@ for (const name of remoteReposKeys) {
     }
   }
 
-  // pull all branch
+  // fetch all branch
   cd(path);
   try {
     let branchs = await quiet($`git branch -r`);
@@ -148,13 +148,11 @@ for (const name of remoteReposKeys) {
       })
       .map((r) => `${r}:${r}`)
       .join(" ");
-
-    if (branchs.length == 0) {
-      continue;
+    if (branchs.length > 0) {
+      await $`git checkout --quiet --detach HEAD`;
+      await $`git fetch origin ${branchs}`;
+      await $`git checkout --quiet -`;
     }
-    await $`git checkout --quiet --detach HEAD`;
-    await $`git fetch origin ${branchs}`;
-    await $`git checkout --quiet -`;
   } catch (p) {
     console.log(`Error: ${p.stderr || p}`);
   }
