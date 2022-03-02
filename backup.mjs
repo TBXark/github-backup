@@ -62,7 +62,8 @@ function configPath() {
   }
 }
 
-let config = await loadConfig(configPath());
+let cPath = configPath()
+let config = await loadConfig(cPath);
 const remoteRepos = await fetchRepos(config.username, config.token)
 
 for (const name of updateRepos(config, remoteRepos)) {
@@ -97,4 +98,4 @@ for (const task of tasks) {
   await `${task}`
 }
 
-await fs.writeFile(configPath, JSON.stringify(config, null, 2))
+await fs.writeFile(cPath, JSON.stringify(config, null, 2))
