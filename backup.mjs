@@ -2,7 +2,6 @@
 
 //import "zx/globals";
 
-
 async function loadConfig(path) {
   let content = {};
   if (fs.pathExistsSync(path)) {
@@ -78,19 +77,24 @@ for (const name of updateRepos(config, remoteRepos)) {
   }
 }
 
+let tasks = []
 for (const name of Object.keys(config.repos)) {
   const path = `./${name}`
   const repo = remoteRepos[name]
   if (fs.pathExistsSync(path)) {
-    await $`cd ${path} && git pull`
+    tasks.push(`cd ${path} && git pull`)
   } else {
     const clone = await question(`Clone ${repo.ssh_url}? (y/n): `, {
       choices: ['y', 'n']
     })
     if (clone === 'y') {
-      await $`git clone ${repo.ssh_url}`
+      tasks.push(`git clone ${repo.ssh_url}`)
     }
   }
+}
+
+for (const task of tasks) {
+  await `${task}`
 }
 
 await fs.writeFile(configPath, JSON.stringify(config, null, 2))
