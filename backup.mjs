@@ -82,10 +82,9 @@ if (args["target"]) {
   cd(args["target"]);
 }
 
-// config path
-let cPath = args["config"] || "./.github_backup_config.json";
 
 // load config
+let cPath = args["config"] || "./.github_backup_config.json";
 let config = await loadConfig(cPath);
 
 // clone without question
@@ -133,7 +132,7 @@ for (const name of remoteReposKeys) {
   cd(path);
   let branchs = await $`git branch -r`;
   branchs = branchs
-    .toString()
+    .stdout
     .split("\n")
     .map((r) => r.replace(/^ */, ""))
     .filter((r) => !r.startsWith("origin/HEAD") && r.length > 0)
