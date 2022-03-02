@@ -95,7 +95,7 @@ for (const name of Object.keys(config.repos)) {
 }
 
 for (const task of tasks) {
-  await `${task}`
+  await $`${task}`
 }
 
 await fs.writeFile(cPath, JSON.stringify(config, null, 2))
