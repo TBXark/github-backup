@@ -9,6 +9,7 @@ backup all github repo to local
 
 npm i -g zx
 wget https://raw.githubusercontent.com/tbxark/github-backup/master/backup.mjs
+chmod +x backup.mjs
 
 ```
 
