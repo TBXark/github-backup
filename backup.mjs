@@ -145,18 +145,23 @@ for (const name of remoteReposKeys) {
       .split("\n")
       .map((r) => r.replace(/^ */, ""))
       .filter((r) => r.indexOf("->") < 0 && r.length > 0)
-      .map((r) => r.split("/"));
+      .map((r) => r.split("/"))
+      .map((r) => {
+        const [remote, ...branch] = r;
+        return branch.join("/")
+      })
+      .map((r) => `${r}:${r}`)
+      .join(' ');
 
-    for (const b of branchs) {
-      const [remote, ...branch] = b;
-      try {
-        await $`git pull ${remote} ${branch.join("/")}`;
-      } catch (p) {
-        console.log(`Error: ${p.stderr}`);
-      }
+    if (branchs.length == 0) {
+      continue;
     }
+    await $`git checkout --quiet --detach HEAD`
+    await $`git fetch origin ${branchs}`
+    await $`git checkout --quiet -`
   } catch (p) {
-    console.log(`Error: ${p.stderr}`);
+    console.log(`Error: ${p.stderr || p}`);
+    break;
   }
   cd("..");
 }
