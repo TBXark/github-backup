@@ -157,7 +157,6 @@ for (const name of remoteReposKeys) {
     await $`git checkout --quiet -`;
   } catch (p) {
     console.log(`Error: ${p.stderr || p}`);
-    break;
   }
   cd("..");
 }
