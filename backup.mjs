@@ -2,6 +2,9 @@
 
 //import "zx/globals";
 
+await $`git --version`
+await $`pwd`
+
 async function loadConfig(path) {
   let content = {};
   if (fs.pathExistsSync(path)) {
@@ -62,8 +65,10 @@ function configPath() {
   }
 }
 
+
 let cPath = configPath()
 let config = await loadConfig(cPath);
+const cloneAll = process.argv.indexOf('--clone=all') >= 0
 const remoteRepos = await fetchRepos(config.username, config.token)
 
 for (const name of updateRepos(config, remoteRepos)) {
@@ -78,24 +83,25 @@ for (const name of updateRepos(config, remoteRepos)) {
   }
 }
 
-let tasks = []
 for (const name of Object.keys(config.repos)) {
   const path = `./${name}`
   const repo = remoteRepos[name]
   if (fs.pathExistsSync(path)) {
-    tasks.push(`cd ${path} && git pull`)
+    await $`cd ${path} && git pull`
   } else {
+    if (cloneAll) {
+      await $`git clone ${repo.ssh_url}`
+      continue
+    }
     const clone = await question(`Clone ${repo.ssh_url}? (y/n): `, {
       choices: ['y', 'n']
     })
     if (clone === 'y') {
-      tasks.push(`git clone ${repo.ssh_url}`)
+      await $`git clone ${repo.ssh_url}`
     }
   }
 }
 
-for (const task of tasks) {
-  await $`${task}`
-}
+
 
 await fs.writeFile(cPath, JSON.stringify(config, null, 2))
