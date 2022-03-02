@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-import "zx/globals";
+//import "zx/globals";
 
 
 async function loadConfig(path) {
