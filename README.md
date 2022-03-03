@@ -6,7 +6,7 @@ Backup all github repo to local, (This is a [zx](https://github.com/google/zx) b
 ### Quick usage
 
 ```shell
-npx zx https://raw.githubusercontent.com/tbxark/github-backup/master/backup.mjs --target=$(PATH_TO_STORE_DIR)
+npx zx https://raw.githubusercontent.com/tbxark/github-backup/master/backup.mjs
 ```
 
 
