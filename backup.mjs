@@ -30,7 +30,7 @@ async function fetchRepos(username, token) {
 
   while (true) {
     let response = await fetch(
-      `https://api.github.com/search/repositories?q=user%3Atbxark&page=${page}`,
+      `https://api.github.com/search/repositories?q=user%3A${encodeURIComponent(username)}&page=${page}`,
       {
         method: "GET",
         headers: { Authorization: `token ${token}` },
@@ -79,23 +79,29 @@ function parseArgs() {
     const [key, value] = c.splitOnce("=");
     res[key.replace("--", "")] = value;
   }
+
+  if (args.target) {
+    args.target = path.resolve(args.target);
+    cd(args.target);
+  } else {
+    args.target = path.resolve(".");
+  }
+
+  if (args.config) {
+    args.config = path.resolve(args.config);
+  } else {
+    args.config = path.resolve("./.github_backup_config.json");
+  }
   return res;
 }
 
 const yesOrNoChoices = { choices: ["y", "Y", "n", "N"] };
 const yesOrNoToBoolean = { y: true, n: false, Y: true, N: false };
+
 const args = parseArgs();
 
-if (args.target) {
-  args.target = path.resolve(args.target);
-  cd(args.target);
-} else {
-  args.target = path.resolve(".");
-}
-
 // load config
-let configPath = args.config || path.resolve("./.github_backup_config.json");
-let config = await loadConfig(configPath);
+let config = await loadConfig(args.config);
 
 // clone without question
 const cloneAll = args.clone === "all";
@@ -192,4 +198,4 @@ for (const name of Object.keys(remoteRepos)) {
 
 // update config
 config.repos = { ...keepRepos, ...ignoreRepos, ...remoteRepos };
-await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+await fs.writeFile(args.config, JSON.stringify(config, null, 2));
