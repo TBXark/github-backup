@@ -4,7 +4,9 @@
 
 async function loadConfig(path) {
   let content = {};
+  let isNewConfig = true;
   if (fs.pathExistsSync(path)) {
+    isNewConfig = false;
     content = await fs.readJson(path);
   }
   if (!content.username) {
@@ -16,6 +18,9 @@ async function loadConfig(path) {
   if (!content.repos) {
     content.repos = {};
   }
+  if (isNewConfig) {
+    await fs.writeFile(path, JSON.stringify(content, null, 2));
+  }
   return content;
 }
 
@@ -24,10 +29,13 @@ async function fetchRepos(username, token) {
   let page = 0;
 
   while (true) {
-    let response = await fetch(`https://api.github.com/search/repositories?q=user%3Atbxark&page=${page}`, {
+    let response = await fetch(
+      `https://api.github.com/search/repositories?q=user%3Atbxark&page=${page}`,
+      {
         method: "GET",
         headers: { Authorization: `token ${token}` },
-    });
+      }
+    );
     response = await response.json();
     const total = response.total_count;
     response = response.items.map((ele) => {
@@ -60,91 +68,110 @@ async function fetchRepos(username, token) {
   return store;
 }
 
+String.prototype.splitOnce = function (ele) {
+  var i = this.indexOf(ele);
+  return [this.slice(0, i), this.slice(i + 1)];
+};
+
 function parseArgs() {
   let res = {};
   for (const c of process.argv.filter((arg) => arg.startsWith("--"))) {
-    const [key, ...value] = c.split("=");
-    res[key.replace("--", "")] = value.join("=");
+    const [key, value] = c.splitOnce("=");
+    res[key.replace("--", "")] = value;
   }
   return res;
 }
 
+const yesOrNoChoices = { choices: ["y", "Y", "n", "N"] };
+const yesOrNoToBoolean = { y: true, n: false, Y: true, N: false };
 const args = parseArgs();
 
-// repos store directory
-// let targetDir = await quiet($`pwd`);
-// targetDir = targetDir.stdout.toString();
-if (args["target"]) {
-  // targetDir = args["target"];
-  cd(args["target"]);
+if (args.target) {
+  args.target = path.resolve(args.target);
+  cd(args.target);
+} else {
+  args.target = path.resolve(".");
 }
 
 // load config
-let cPath = args["config"] || "./.github_backup_config.json";
-let config = await loadConfig(cPath);
+let configPath = args.config || path.resolve("./.github_backup_config.json");
+let config = await loadConfig(configPath);
 
 // clone without question
-const cloneAll = args["clone"] === "all";
+const cloneAll = args.clone === "all";
 
 // fetch repos
+const keepRepos = {};
+const ignoreRepos = {};
 const remoteRepos = await fetchRepos(config.username, config.token);
-
-const localReposKeys = Object.keys(config.repos);
 const remoteReposKeys = Object.keys(remoteRepos);
 
-// delete repos
-for (const name of localReposKeys.filter((r) => !remoteReposKeys.includes(r))) {
-  const path = `./${name}`;
-  if (fs.pathExistsSync(path)) {
-    const del = await question(`Delete ${path}? (y/n): `, {
-      choices: ["y", "n"],
-    });
-    if (del === "y") {
-      await fs.remove(path);
+// handle untracked repositories
+for (const name of Object.keys(config.repos)) {
+  const repo = config.repos[name];
+  const repoDir = path.resolve(`./${repo.name}`);
+  if (remoteReposKeys.includes(repo.name)) {
+    remoteRepos[repo.name].ignore = repo.ignore;
+    // ignore repositories if need
+    if (repo.ignore) {
+      ignoreRepos[repo.name] = repo;
+      delete remoteRepos[repo.name];
+    }
+    continue;
+  }
+  // delete or keep untracked repositories
+  if (fs.pathExistsSync(repoDir)) {
+    if (repo.keep) {
+      continue;
+    }
+    const del = await question(`Delete ${repoDir}? (y/n): `, yesOrNoChoices);
+    if (yesOrNoToBoolean(del) || false) {
+      await fs.remove(repoDir);
+    } else {
+      const keep = await question(`Keep ${repoDir}? (y/n): `, yesOrNoChoices);
+      if (yesOrNoToBoolean(keep) || false) {
+        repo.keep = true;
+        keepRepos[repo.name] = repo;
+      }
     }
   }
 }
 
 // update repos
-for (const name of remoteReposKeys) {
-  const path = `./${name}`;
+for (const name of Object.keys(remoteRepos)) {
   const repo = remoteRepos[name];
-
-  // ignore repo
-  if (config.repos[name] && config.repos[name].ignore) {
-    remoteRepos[name].ignore = true;
-    continue;
-  }
+  const repoDir = path.resolve(`./${repo.name}`);
 
   // clone if not exist
-  if (!fs.pathExistsSync(path)) {
+  if (!fs.pathExistsSync(repoDir)) {
     if (cloneAll) {
       await $`git clone ${repo.ssh_url}`;
     } else {
-      const clone = await question(`Clone ${repo.ssh_url}? (y/n): `, {
-        choices: ["y", "n"],
-      });
-      if (clone === "y") {
+      const clone = await question(
+        `Clone ${repo.ssh_url}? (y/n): `,
+        yesOrNoChoices
+      );
+      if (yesOrNoToBoolean(clone) || false) {
         await $`git clone ${repo.ssh_url}`;
-      } else if (clone === "n") {
-        remoteRepos[name].ignore = true;
+      } else {
+        repo.ignore = true;
         continue;
       }
     }
   }
 
   // fetch all branch
-  cd(path);
+  cd(repoDir);
   try {
     let branchs = await quiet($`git branch -r`);
     branchs = branchs.stdout
       .split("\n")
       .map((r) => r.replace(/^ */, ""))
       .filter((r) => r.indexOf("->") < 0 && r.length > 0)
-      .map((r) => r.split("/"))
+      .map((r) => r.splitOnce("/"))
       .map((r) => {
-        const [remote, ...branch] = r;
-        return { remote, branch: branch.join("/") };
+        const [remote, branch] = r;
+        return { remote, branch };
       });
     if (branchs.length > 0) {
       await $`git checkout --quiet --detach HEAD`;
@@ -160,9 +187,9 @@ for (const name of remoteReposKeys) {
   } catch (p) {
     console.log(`Error: ${p.stderr || p}`);
   }
-  cd("..");
+  cd(args.target);
 }
 
 // update config
-config.repos = remoteRepos;
-await fs.writeFile(cPath, JSON.stringify(config, null, 2));
+config.repos = { ...keepRepos, ...ignoreRepos, ...remoteRepos };
+await fs.writeFile(configPath, JSON.stringify(config, null, 2));
