@@ -103,9 +103,6 @@ const args = parseArgs();
 // load config
 let config = await loadConfig(args.config);
 
-// clone without question
-const cloneAll = args.clone === "all";
-
 // fetch repos
 const keepRepos = {};
 const ignoreRepos = {};
@@ -150,8 +147,11 @@ for (const name of Object.keys(remoteRepos)) {
 
   // clone if not exist
   if (!fs.pathExistsSync(repoDir)) {
-    if (cloneAll) {
+    if (args.clone === "all") {
       await $`git clone ${repo.ssh_url}`;
+    } else if (args.clone === "none") {
+      repo.ignore = true;
+      continue;
     } else {
       const clone = await question(
         `Clone ${repo.ssh_url}? (y/n): `,
