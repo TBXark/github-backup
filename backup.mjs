@@ -2,6 +2,39 @@
 
 // import "zx/globals";
 
+
+///////////////Utils/////////////////
+
+String.prototype.splitOnce = function (ele) {
+  var i = this.indexOf(ele);
+  return [this.slice(0, i), this.slice(i + 1)];
+};
+
+function parseArgs() {
+  let res = {};
+  for (const c of process.argv.filter((arg) => arg.startsWith("--"))) {
+    const [key, value] = c.splitOnce("=");
+    res[key.replace("--", "")] = value;
+  }
+
+  if (res.target) {
+    res.target = path.resolve(res.target);
+    cd(res.target);
+  } else {
+    res.target = path.resolve(".");
+  }
+
+  if (res.config) {
+    res.config = path.resolve(res.config);
+  } else {
+    res.config = path.resolve("./.github_backup_config.json");
+  }
+  return res;
+}
+
+
+///////////////Func/////////////////
+
 async function loadConfig(path) {
   let content = {};
   let isNewConfig = true;
@@ -30,7 +63,9 @@ async function fetchRepos(username, token) {
 
   while (true) {
     let response = await fetch(
-      `https://api.github.com/search/repositories?q=user%3A${encodeURIComponent(username)}&page=${page}`,
+      `https://api.github.com/search/repositories?q=user%3A${encodeURIComponent(
+        username
+      )}&page=${page}`,
       {
         method: "GET",
         headers: { Authorization: `token ${token}` },
@@ -68,32 +103,8 @@ async function fetchRepos(username, token) {
   return store;
 }
 
-String.prototype.splitOnce = function (ele) {
-  var i = this.indexOf(ele);
-  return [this.slice(0, i), this.slice(i + 1)];
-};
 
-function parseArgs() {
-  let res = {};
-  for (const c of process.argv.filter((arg) => arg.startsWith("--"))) {
-    const [key, value] = c.splitOnce("=");
-    res[key.replace("--", "")] = value;
-  }
-
-  if (res.target) {
-    res.target = path.resolve(res.target);
-    cd(res.target);
-  } else {
-    res.target = path.resolve(".");
-  }
-
-  if (res.config) {
-    res.config = path.resolve(res.config);
-  } else {
-    res.config = path.resolve("./.github_backup_config.json");
-  }
-  return res;
-}
+///////////////Main/////////////////
 
 const yesOrNoChoices = { choices: ["y", "Y", "n", "N"] };
 const yesOrNoToBoolean = { y: true, n: false, Y: true, N: false };
@@ -142,6 +153,9 @@ for (const name of Object.keys(config.repos)) {
 
 // update repos
 for (const name of Object.keys(remoteRepos)) {
+  
+  cd(args.target);
+
   const repo = remoteRepos[name];
   const repoDir = path.resolve(`./${repo.name}`);
 
@@ -193,9 +207,19 @@ for (const name of Object.keys(remoteRepos)) {
   } catch (p) {
     console.log(`Error: ${p.stderr || p}`);
   }
-  cd(args.target);
 }
+
+cd(args.target);
 
 // update config
 config.repos = { ...keepRepos, ...ignoreRepos, ...remoteRepos };
 await fs.writeFile(args.config, JSON.stringify(config, null, 2));
+
+
+
+
+
+
+
+
+
