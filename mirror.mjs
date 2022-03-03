@@ -1,37 +1,8 @@
 #!/usr/bin/env zx
 
-import "zx/globals";
+// import "zx/globals";
 
-///////////////Utils/////////////////
-
-String.prototype.splitOnce = function (ele) {
-  var i = this.indexOf(ele);
-  return [this.slice(0, i), this.slice(i + 1)];
-};
-
-function parseArgs() {
-  let res = {};
-  console.log(process.argv);
-  for (const c of process.argv.filter((arg) => arg.startsWith("--"))) {
-    console.log(typeof c);
-    const [key, value] = c.splitOnce("=");
-    res[key.replace("--", "")] = value;
-  }
-
-  if (res.target) {
-    res.target = path.resolve(res.target);
-    cd(res.target);
-  } else {
-    res.target = path.resolve(".");
-  }
-
-  if (res.config) {
-    res.config = path.resolve(res.config);
-  } else {
-    res.config = path.resolve("./.github_backup_config.json");
-  }
-  return res;
-}
+import { parseArgs } from "./backup.mjs";
 
 ///////////////Func/////////////////
 
@@ -54,11 +25,10 @@ async function createGiteeRepoIfNotExist(name, user, token, isPrivate) {
   return await response.json();
 }
 
-
 ///////////////Main/////////////////
 
-
 const args = parseArgs();
+console.log(args)
 
 if (!args.token) {
   throw new Error("Missing token");
@@ -86,4 +56,3 @@ for (const name of Object.keys(config.repos)) {
     }
   }
 }
-

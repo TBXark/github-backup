@@ -3,27 +3,17 @@
 // import "zx/globals";
 
 
-///////////////Utils/////////////////
+///////////////Func/////////////////
 
-String.prototype.splitOnce = function (ele) {
-  var i = this.indexOf(ele);
-  return [this.slice(0, i), this.slice(i + 1)];
-};
-
-function parseArgs() {
-  let res = {};
-  for (const c of process.argv.filter((arg) => arg.startsWith("--"))) {
-    const [key, value] = c.splitOnce("=");
-    res[key.replace("--", "")] = value;
-  }
+export function parseArgs() {
+  let res = require("minimist")(process.argv);
+  delete res["_"];
 
   if (res.target) {
     res.target = path.resolve(res.target);
-    cd(res.target);
   } else {
     res.target = path.resolve(".");
   }
-
   if (res.config) {
     res.config = path.resolve(res.config);
   } else {
@@ -32,8 +22,6 @@ function parseArgs() {
   return res;
 }
 
-
-///////////////Func/////////////////
 
 async function loadConfig(path) {
   let content = {};
@@ -103,16 +91,17 @@ async function fetchRepos(username, token) {
   return store;
 }
 
-
 ///////////////Main/////////////////
 
 const yesOrNoChoices = { choices: ["y", "Y", "n", "N"] };
 const yesOrNoToBoolean = { y: true, n: false, Y: true, N: false };
 
 const args = parseArgs();
+console.log(args)
 
 // load config
 let config = await loadConfig(args.config);
+cd(args.target);
 
 // fetch repos
 const keepRepos = {};
@@ -153,7 +142,6 @@ for (const name of Object.keys(config.repos)) {
 
 // update repos
 for (const name of Object.keys(remoteRepos)) {
-  
   cd(args.target);
 
   const repo = remoteRepos[name];
@@ -188,9 +176,9 @@ for (const name of Object.keys(remoteRepos)) {
       .split("\n")
       .map((r) => r.replace(/^ */, ""))
       .filter((r) => r.indexOf("->") < 0 && r.length > 0)
-      .map((r) => r.splitOnce("/"))
       .map((r) => {
-        const [remote, branch] = r;
+        var i = r.indexOf("/");
+        const [remote, branch] = [r.slice(0, i), r.slice(i + 1)];
         return { remote, branch };
       });
     if (branchs.length > 0) {
@@ -214,12 +202,3 @@ cd(args.target);
 // update config
 config.repos = { ...keepRepos, ...ignoreRepos, ...remoteRepos };
 await fs.writeFile(args.config, JSON.stringify(config, null, 2));
-
-
-
-
-
-
-
-
-
