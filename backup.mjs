@@ -80,17 +80,17 @@ function parseArgs() {
     res[key.replace("--", "")] = value;
   }
 
-  if (args.target) {
-    args.target = path.resolve(args.target);
-    cd(args.target);
+  if (res.target) {
+    res.target = path.resolve(res.target);
+    cd(res.target);
   } else {
-    args.target = path.resolve(".");
+    res.target = path.resolve(".");
   }
 
-  if (args.config) {
-    args.config = path.resolve(args.config);
+  if (res.config) {
+    res.config = path.resolve(res.config);
   } else {
-    args.config = path.resolve("./.github_backup_config.json");
+    res.config = path.resolve("./.github_backup_config.json");
   }
   return res;
 }
