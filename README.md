@@ -1,6 +1,6 @@
 # Github backup
 
-backup all github repo to local
+Backup all github repo to local, (This is a [zx](https://github.com/google/zx) based script)
 
 ### Install
 
