@@ -27,14 +27,16 @@ chmod +x backup.mjs
 - #### `target` 
   The folder where repos is stored, the default is the current execution directory
   
-- ### `config`
+- #### `config`
   Configuration file storage path. If the file does not exist, it will be automatically created and stored in the current directory by default.
   
-- ### `clone`
+- #### `clone`
   When `clone` is `all`, clone all repos that do not exist. When `clone` is `none`, ignore all non-existing repos. For other values, ask when there are repos that don't exist.
   
   
 ### Configuration
+
+Configuration files are created automatically, no manual creation and configuration is required. Enter username and token when running the script if the configuration file does not exist. All repos configuration information will be automatically obtained. Of course you can also modify the configuration files.
 
 ```js
 
