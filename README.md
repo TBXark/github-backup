@@ -36,6 +36,8 @@ chmod +x backup.mjs
   
 ### Configuration
 
+Configuration files are created automatically, no manual creation and configuration is required. Enter username and token when running the script if the configuration file does not exist. All repos configuration information will be automatically obtained. Of course you can also modify the automatically created configuration files.
+
 ```js
 
 {
