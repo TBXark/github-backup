@@ -128,11 +128,11 @@ for (const name of Object.keys(config.repos)) {
       continue;
     }
     const del = await question(`Delete ${repoDir}? (y/n): `, yesOrNoChoices);
-    if (yesOrNoToBoolean(del) || false) {
+    if (yesOrNoToBoolean[del]) {
       await fs.remove(repoDir);
     } else {
       const keep = await question(`Keep ${repoDir}? (y/n): `, yesOrNoChoices);
-      if (yesOrNoToBoolean(keep) || false) {
+      if (yesOrNoToBoolean[keep]) {
         repo.keep = true;
         keepRepos[repo.name] = repo;
       }
@@ -159,7 +159,7 @@ for (const name of Object.keys(remoteRepos)) {
         `Clone ${repo.ssh_url}? (y/n): `,
         yesOrNoChoices
       );
-      if (yesOrNoToBoolean(clone) || false) {
+      if (yesOrNoToBoolean[clone]) {
         await $`git clone ${repo.ssh_url}`;
       } else {
         repo.ignore = true;
