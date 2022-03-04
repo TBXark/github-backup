@@ -6,7 +6,7 @@
 ///////////////Func/////////////////
 
 export function parseArgs() {
-  let res = require("minimist")(process.argv);
+  let res = argv;
   delete res["_"];
 
   if (res.target) {
