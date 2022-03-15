@@ -20,6 +20,7 @@ npx zx https://raw.githubusercontent.com/tbxark/github-backup/master/mirror.mjs
 npm i -g zx
 wget https://raw.githubusercontent.com/tbxark/github-backup/master/backup.mjs
 chmod +x backup.mjs
+chmod +x mirror.mjs
 ./backup.mjs --config=$(PATH_TO_CONFIG) --target=$(PATH_TO_STORE_DIR) --clone=${all|none|other}
 ./mirror.mjs --config=$(PATH_TO_CONFIG) --target=$(PATH_TO_STORE_DIR) --token=${GITEE_TOKEN} --private=${always|auto}
 ```
