@@ -5,7 +5,7 @@
 
 ///////////////Func/////////////////
 
-export function parseArgs() {
+function parseArgs() {
   let res = argv;
   delete res["_"];
 

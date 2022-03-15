@@ -2,9 +2,24 @@
 
 // import "zx/globals";
 
-import { parseArgs } from "./backup.mjs";
-
 ///////////////Func/////////////////
+
+function parseArgs() {
+  let res = argv;
+  delete res["_"];
+
+  if (res.target) {
+    res.target = path.resolve(res.target);
+  } else {
+    res.target = path.resolve(".");
+  }
+  if (res.config) {
+    res.config = path.resolve(res.config);
+  } else {
+    res.config = path.resolve("./.github_backup_config.json");
+  }
+  return res;
+}
 
 async function createGiteeRepoIfNotExist(name, user, token, isPrivate) {
   let response = await fetch(

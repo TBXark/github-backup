@@ -7,6 +7,8 @@ Backup all github repos, (This is a [zx](https://github.com/google/zx) based scr
 
 ```shell
 npx zx https://raw.githubusercontent.com/tbxark/github-backup/master/backup.mjs
+npx zx https://raw.githubusercontent.com/tbxark/github-backup/master/mirror.mjs
+
 ```
 
 
@@ -75,7 +77,7 @@ Configuration files are created automatically, no manual creation and configurat
 
 ### Mirror
 
-暂时只写了一个将repos镜像到gitee的脚本, 这个得clone本仓库后使用，暂时不支持`npx`，需要gitee的[token](https://gitee.com/profile/personal_access_tokens)，会自动创建不存在的repo。
+暂时只写了一个将repos镜像到gitee的脚本, 这个得clone本仓库后使用，需要gitee的[token](https://gitee.com/profile/personal_access_tokens)，会自动创建不存在的repo。
 可以根据原有github仓库类型创建私有还是公有仓库（公有仓库得手机号码认证），也可以全部设置为私有。
 ```shell
 ./mirror.mjs --config=$(PATH_TO_CONFIG) --target=$(PATH_TO_STORE_DIR) --token=${GITEE_TOKEN} --private=${always|auto}
