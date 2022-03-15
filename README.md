@@ -1,6 +1,6 @@
 # Github backup
 
-Backup all github repo to local, (This is a [zx](https://github.com/google/zx) based script)
+Backup all github repos, (This is a [zx](https://github.com/google/zx) based script)
 
 
 ### Quick usage
