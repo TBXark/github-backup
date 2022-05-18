@@ -2,26 +2,24 @@
 
 // import "zx/globals";
 
-
-///////////////Func/////////////////
+// /////////////Func/////////////////
 
 function parseArgs() {
-  let res = argv;
-  delete res["_"];
+  const res = argv;
+  delete res['_'];
 
   if (res.target) {
     res.target = path.resolve(res.target);
   } else {
-    res.target = path.resolve(".");
+    res.target = path.resolve('.');
   }
   if (res.config) {
     res.config = path.resolve(res.config);
   } else {
-    res.config = path.resolve("./.github_backup_config.json");
+    res.config = path.resolve('./.github_backup_config.json');
   }
   return res;
 }
-
 
 async function loadConfig(path) {
   let content = {};
@@ -31,10 +29,10 @@ async function loadConfig(path) {
     content = await fs.readJson(path);
   }
   if (!content.username) {
-    content.username = await question("Please enter your username: ");
+    content.username = await question('Please enter your username: ');
   }
   if (!content.token) {
-    content.token = await question("Please enter your token: ");
+    content.token = await question('Please enter your token: ');
   }
   if (!content.repos) {
     content.repos = {};
@@ -46,19 +44,16 @@ async function loadConfig(path) {
 }
 
 async function fetchRepos(username, token) {
-  let store = {};
+  const store = {};
   let page = 0;
 
   while (true) {
-    let response = await fetch(
-      `https://api.github.com/search/repositories?q=user%3A${encodeURIComponent(
-        username
-      )}&page=${page}`,
-      {
-        method: "GET",
-        headers: { Authorization: `token ${token}` },
-      }
-    );
+    const user = encodeURIComponent(username);
+    const url = `https://api.github.com/search/repositories?q=user%3A${user}&page=${page}`;
+    let response = await fetch(url, {
+      method: 'GET',
+      headers: {Authorization: `token ${token}`},
+    });
     response = await response.json();
     const total = response.total_count;
     response = response.items.map((ele) => {
@@ -87,22 +82,43 @@ async function fetchRepos(username, token) {
       break;
     }
   }
-
   return store;
 }
 
-///////////////Main/////////////////
+// /////////////Main/////////////////
 
-const yesOrNoChoices = { choices: ["y", "Y", "n", "N"] };
-const yesOrNoToBoolean = { y: true, n: false, Y: true, N: false };
+const yesOrNoChoices = {choices: ['y', 'Y', 'n', 'N']};
+const yesOrNoToBoolean = {y: true, n: false, Y: true, N: false};
 
+/*
+args
+{
+  target: './', // path to target directory
+  config: './github_backup_config.json', // path to config file
+  untracked: 'question', // 'delete' or 'keep' or 'question'
+  clone: 'question', // 'all' or 'none' or 'question'
+  branch: 'all', // 'all' or 'current'
+}
+*/
 const args = parseArgs();
-console.log(args)
+console.log(args);
 
 // load config
-let config = await loadConfig(args.config);
+const config = await loadConfig(args.config);
 cd(args.target);
 
+
+/* 
+repo
+{
+  name: '',
+  status: {},
+  date: {},
+  ssh_url: '',
+  keep: true,
+  ignore: false,
+}
+*/
 // fetch repos
 const keepRepos = {};
 const ignoreRepos = {};
@@ -127,21 +143,41 @@ for (const name of Object.keys(config.repos)) {
     if (repo.keep) {
       continue;
     }
-    const del = await question(`Delete ${repoDir}? (y/n): `, yesOrNoChoices);
-    if (yesOrNoToBoolean[del]) {
-      await fs.remove(repoDir);
-    } else {
-      const keep = await question(`Keep ${repoDir}? (y/n): `, yesOrNoChoices);
-      if (yesOrNoToBoolean[keep]) {
+    switch (args.untracked) {
+      case 'delete': {
+        await fs.remove(repoDir);
+        break;
+      }
+      case 'keep': {
         repo.keep = true;
         keepRepos[repo.name] = repo;
+        break;
+      }
+      default: {
+        const del = await question(
+            `Delete ${repoDir}? (y/n): `,
+            yesOrNoChoices,
+        );
+        if (yesOrNoToBoolean[del]) {
+          await fs.remove(repoDir);
+        } else {
+          const keep = await question(
+              `Keep ${repoDir}? (y/n): `,
+              yesOrNoChoices,
+          );
+          if (yesOrNoToBoolean[keep]) {
+            repo.keep = true;
+            keepRepos[repo.name] = repo;
+          }
+        }
+        break;
       }
     }
   }
 }
 
 // update repos
-for (const name of Object.keys(remoteRepos)) {
+updateloop: for (const name of Object.keys(remoteRepos)) {
   cd(args.target);
 
   const repo = remoteRepos[name];
@@ -149,56 +185,74 @@ for (const name of Object.keys(remoteRepos)) {
 
   // clone if not exist
   if (!fs.pathExistsSync(repoDir)) {
-    if (args.clone === "all") {
-      await $`git clone ${repo.ssh_url}`;
-    } else if (args.clone === "none") {
-      repo.ignore = true;
-      continue;
-    } else {
-      const clone = await question(
-        `Clone ${repo.ssh_url}? (y/n): `,
-        yesOrNoChoices
-      );
-      if (yesOrNoToBoolean[clone]) {
+    switch (args.clone) {
+      case 'all': {
         await $`git clone ${repo.ssh_url}`;
-      } else {
+        break;
+      }
+      case 'none': {
         repo.ignore = true;
-        continue;
+        continue updateloop;
+      }
+      default: {
+        const clone = await question(
+            `Clone ${repo.ssh_url}? (y/n): `,
+            yesOrNoChoices,
+        );
+        if (yesOrNoToBoolean[clone]) {
+          await $`git clone ${repo.ssh_url}`;
+        } else {
+          repo.ignore = true;
+          continue updateloop;
+        }
+        break;
       }
     }
   }
 
-  // fetch all branch
+  // pull all branch
   cd(repoDir);
-  try {
-    let branchs = await quiet($`git branch -r`);
-    branchs = branchs.stdout
-      .split("\n")
-      .map((r) => r.replace(/^ */, ""))
-      .filter((r) => r.indexOf("->") < 0 && r.length > 0)
-      .map((r) => {
-        var i = r.indexOf("/");
-        const [remote, branch] = [r.slice(0, i), r.slice(i + 1)];
-        return { remote, branch };
-      });
-    if (branchs.length > 0) {
-      await $`git checkout --quiet --detach HEAD`;
-      for (const b of branchs) {
-        try {
-          await $`git fetch ${b.remote} ${b.branch}`;
-        } catch (p) {
-          console.log(`Error: ${p.stderr || p}`);
-        }
+  switch (args.branch) {
+    case 'current': {
+      try {
+        await $`git fetch ${b.remote} ${b.branch}`;
+      } catch (p) {
+        console.log(`Error: ${p.stderr || p}`);
       }
-      await $`git checkout --quiet -`;
+      break;
     }
-  } catch (p) {
-    console.log(`Error: ${p.stderr || p}`);
+    default: {
+      try {
+        let branchs = await quiet($`git branch -r`);
+        branchs = branchs.stdout
+            .split('\n')
+            .map((r) => r.replace(/^ */, ''))
+            .filter((r) => r.indexOf('->') < 0 && r.length > 0)
+            .map((r) => {
+              const i = r.indexOf('/');
+              const [remote, branch] = [r.slice(0, i), r.slice(i + 1)];
+              return {remote, branch};
+            });
+        if (branchs.length > 0) {
+          await $`git checkout --quiet --detach HEAD`;
+          for (const b of branchs) {
+            try {
+              await $`git fetch ${b.remote} ${b.branch}`;
+            } catch (p) {
+              console.log(`Error: ${p.stderr || p}`);
+            }
+          }
+          await $`git checkout --quiet -`;
+        }
+      } catch (p) {
+        console.log(`Error: ${p.stderr || p}`);
+      }
+    }
   }
 }
 
 cd(args.target);
 
 // update config
-config.repos = { ...keepRepos, ...ignoreRepos, ...remoteRepos };
+config.repos = {...keepRepos, ...ignoreRepos, ...remoteRepos};
 await fs.writeFile(args.config, JSON.stringify(config, null, 2));

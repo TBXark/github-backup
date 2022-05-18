@@ -1,5 +1,12 @@
 {
+  "scripts": {
+    "lint": "eslint --ext .mjs ."
+  },
   "dependencies": {
     "zx": "^5.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0"
   }
 }

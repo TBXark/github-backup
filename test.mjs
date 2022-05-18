@@ -1,3 +1,3 @@
 #!/usr/bin/env zx
 
-console.log(argv)
+console.log(argv);
