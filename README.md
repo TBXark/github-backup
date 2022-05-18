@@ -37,7 +37,7 @@ chmod +x backup.mjs
 
   Whether to clone the repos, the default is `all`
 
-- ### `untracked`
+- #### `untracked`
   > Opitions: `question`, `delete`, `keep`
     Usage in `backup.mjs` only
 
