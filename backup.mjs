@@ -224,12 +224,13 @@ updateloop: for (const name of Object.keys(remoteRepos)) {
           return {remote, branch};
         });
     if (branchs.length > 0) {
-      const currentBranch = await quiet($`git rev-parse --abbrev-ref HEAD`).then(b => b.toString().trim());
+      let currentBranch = await quiet($`git rev-parse --abbrev-ref HEAD`).then(b => b.toString().trim());
+      currentBranch = new Set([currentBranch, 'HEAD']);
       await $`git checkout --quiet --detach HEAD`;
       for (const b of branchs) {
-        if (args.branch === 'current' && b.branch !== currentBranch) {
-            console.log(`ignore branch ${b.branch} ${currentBranch}`);
-            continue
+        if (args.branch === 'current' && !currentBranch.has(b.branch)) {
+          console.log(`ignore branch ${b.branch} ${currentBranch}`);
+          continue
         }
         try {
           await $`git fetch ${b.remote} ${b.branch}`;
