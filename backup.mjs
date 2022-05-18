@@ -215,7 +215,13 @@ updateloop: for (const name of Object.keys(remoteRepos)) {
   switch (args.branch) {
     case 'current': {
       try {
-        await $`git fetch ${b.remote} ${b.branch}`;
+        await $`git checkout --quiet --detach HEAD`;
+        try {
+          await $`git fetch`;
+        } catch (p) {
+          console.log(`Error: ${p.stderr || p}`);
+        }
+        await $`git checkout --quiet -`;
       } catch (p) {
         console.log(`Error: ${p.stderr || p}`);
       }
