@@ -71,7 +71,9 @@ Configuration files are created automatically, no manual creation and configurat
  }
 ```
 
-### Backup
+### Usage
+
+#### Backup
 
 使用备份脚本需要`config`配置文件路径，当配置文件不存在的时候会自动创建。`target`是存储repo的目录，`clone`可以选择：`all`下载所有repo，`none`忽略未下载的repo，或者其他值根据repo手动选择。
 当github的token过期的时候可以手动修改配置文件中的token值。或者某个repo的配置有问题也可以手动的修改配置文件。
@@ -80,7 +82,7 @@ Configuration files are created automatically, no manual creation and configurat
 ./backup.mjs --config=$(PATH_TO_CONFIG) --target=$(PATH_TO_STORE_DIR) --clone=${all|none|other}
 ```
 
-### Mirror
+#### Mirror
 
 暂时只写了一个将repos镜像到gitee的脚本, 这个得clone本仓库后使用，需要gitee的[token](https://gitee.com/profile/personal_access_tokens)，会自动创建不存在的repo。
 可以根据原有github仓库类型创建私有还是公有仓库（公有仓库得手机号码认证），也可以全部设置为私有。
