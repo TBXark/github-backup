@@ -32,20 +32,20 @@ chmod +x backup.mjs
   The config file, the default is `./github_backup_config.json`, create a config file if not exists
   
 - #### `clone`
-  > Opitions: `all`, `none`, `question`
-    Usage in `backup.mjs` only
+  > Opitions: `all`, `none`, `question`<br>
+  > Usage in `backup.mjs` only
 
   Whether to clone the repos, the default is `all`
 
 - #### `untracked`
-  > Opitions: `question`, `delete`, `keep`
-    Usage in `backup.mjs` only
+  > Opitions: `question`, `delete`, `keep`<br>
+  > Usage in `backup.mjs` only
 
   Whether to delete untracked repos, the default is `question`
 
 - #### `branch`
-  > Opitions: `all`, `current`
-    Usage in `backup.mjs` only
+  > Opitions: `all`, `current`<br>
+  > Usage in `backup.mjs` only
 
   When `branch` is `all`, clone all branches. When `branch` is `current`, clone only the current branch.
   
@@ -55,8 +55,8 @@ chmod +x backup.mjs
   The token to access Gitee.
 
 - #### `private`:
-  > Opitions: `always`, `auto`
-    Usage in `mirror.mjs` only
+  > Opitions: `always`, `auto`<br>
+  > Usage in `mirror.mjs` only
 
   create private repos or not, the default is `auto`
   
