@@ -3,7 +3,7 @@
     "lint": "eslint --ext .mjs ."
   },
   "dependencies": {
-    "zx": "^5.2.0"
+    "zx": "^5.3.0"
   },
   "devDependencies": {
     "eslint": "^8.15.0",
