@@ -229,7 +229,7 @@ updateloop: for (const name of Object.keys(remoteRepos)) {
       await $`git checkout --quiet --detach HEAD`;
       for (const b of branchs) {
         if (args.branch === 'current' && !currentBranch.has(b.branch)) {
-          console.log(`ignore branch ${b.branch} ${currentBranch}`);
+          console.log(`ignore branch ${b.remote}/${b.branch}`);
           continue
         }
         try {
