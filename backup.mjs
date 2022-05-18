@@ -212,48 +212,35 @@ updateloop: for (const name of Object.keys(remoteRepos)) {
 
   // pull all branch
   cd(repoDir);
-  switch (args.branch) {
-    case 'current': {
-      try {
-        await $`git checkout --quiet --detach HEAD`;
+  try {
+    let branchs = await quiet($`git branch -r`);
+    branchs = branchs.stdout
+        .split('\n')
+        .map((r) => r.replace(/^ */, ''))
+        .filter((r) => r.indexOf('->') < 0 && r.length > 0)
+        .map((r) => {
+          const i = r.indexOf('/');
+          const [remote, branch] = [r.slice(0, i), r.slice(i + 1)];
+          return {remote, branch};
+        });
+    if (branchs.length > 0) {
+      const currentBranch = await quiet($`git rev-parse --abbrev-ref HEAD`).then(b => b.toString().trim());
+      await $`git checkout --quiet --detach HEAD`;
+      for (const b of branchs) {
+        if (args.branch === 'current' && b.branch !== currentBranch) {
+            console.log(`ignore branch ${b.branch} ${currentBranch}`);
+            continue
+        }
         try {
-          await $`git fetch`;
+          await $`git fetch ${b.remote} ${b.branch}`;
         } catch (p) {
           console.log(`Error: ${p.stderr || p}`);
         }
-        await $`git checkout --quiet -`;
-      } catch (p) {
-        console.log(`Error: ${p.stderr || p}`);
       }
-      break;
+      await $`git checkout --quiet -`;
     }
-    default: {
-      try {
-        let branchs = await quiet($`git branch -r`);
-        branchs = branchs.stdout
-            .split('\n')
-            .map((r) => r.replace(/^ */, ''))
-            .filter((r) => r.indexOf('->') < 0 && r.length > 0)
-            .map((r) => {
-              const i = r.indexOf('/');
-              const [remote, branch] = [r.slice(0, i), r.slice(i + 1)];
-              return {remote, branch};
-            });
-        if (branchs.length > 0) {
-          await $`git checkout --quiet --detach HEAD`;
-          for (const b of branchs) {
-            try {
-              await $`git fetch ${b.remote} ${b.branch}`;
-            } catch (p) {
-              console.log(`Error: ${p.stderr || p}`);
-            }
-          }
-          await $`git checkout --quiet -`;
-        }
-      } catch (p) {
-        console.log(`Error: ${p.stderr || p}`);
-      }
-    }
+  } catch (p) {
+    console.log(`Error: ${p.stderr || p}`);
   }
 }
 
