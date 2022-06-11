@@ -46,10 +46,9 @@ async function loadConfig(path) {
 async function fetchRepos(username, token) {
   const store = {};
   let page = 0;
-
+  username = encodeURIComponent(username);
   while (true) {
-    const user = encodeURIComponent(username);
-    const url = `https://api.github.com/search/repositories?q=user%3A${user}&page=${page}`;
+    const url = `https://api.github.com/search/repositories?q=user%3A${username}&page=${page}`;
     let response = await fetch(url, {
       method: 'GET',
       headers: {Authorization: `token ${token}`},

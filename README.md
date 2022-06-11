@@ -6,8 +6,8 @@ Backup all github repos, (This is a [zx](https://github.com/google/zx) based scr
 ### Quick usage
 
 ```shell
-npx zx https://raw.githubusercontent.com/tbxark/github-backup/master/backup.mjs
-npx zx https://raw.githubusercontent.com/tbxark/github-backup/master/mirror.mjs
+npx zx https://cdn.jsdelivr.net/gh/tbxark/github-backup/backup.mjs
+npx zx https://cdn.jsdelivr.net/gh/tbxark/github-backup/mirror.mjs
 ```
 
 
@@ -16,8 +16,12 @@ npx zx https://raw.githubusercontent.com/tbxark/github-backup/master/mirror.mjs
 
 ```shell
 npm i -g zx
-wget https://raw.githubusercontent.com/tbxark/github-backup/master/backup.mjs
-chmod +x backup.mjs
+
+wget https://cdn.jsdelivr.net/gh/tbxark/github-backup/backup.mjs
+wget https://cdn.jsdelivr.net/gh/tbxark/github-backup/mirror.mjs
+
+chmod +x backup.mjs mirror.mjs
+
 ./backup.mjs --config=$(PATH_TO_CONFIG) --target=$(PATH_TO_STORE_DIR) 
 ./mirror.mjs --config=$(PATH_TO_CONFIG) --target=$(PATH_TO_STORE_DIR) --token=${GITEE_TOKEN}
 ```
