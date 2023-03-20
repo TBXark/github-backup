@@ -1,5 +1,5 @@
 {
-  "name": "github-backup",
+  "name": "github-repo-backup",
   "version": "1.0.0",
   "description": "Backup all github repos, (This is a [zx](https://github.com/google/zx) based script)",
   "main": "backup.mjs",
