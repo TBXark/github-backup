@@ -16,19 +16,25 @@ type Repo struct {
 }
 
 type BackupProvider interface {
-	LoadRepos(owner string) ([]Repo, error)
-	MigrateRepo(owner, repoOwner, githubToken string, repo Repo) (string, error)
+	LoadRepos(owner string) ([]string, error)
+	MigrateRepo(owner, repoOwner string, repoName, repoDesc string, githubToken string) (string, error)
 	DeleteRepo(owner, repo string) (string, error)
 }
 
 func BackupProviderBuilder(conf *BackupProviderConfig) BackupProvider {
 	switch conf.Type {
 	case "gitea":
-		c := NewGiteaConf(conf.Config)
-		if c == nil {
-			return nil
+		c, err := ConvertToBackupProviderConfig[GiteaConf](conf.Config)
+		if err != nil {
+			log.Fatalf("convert gitea config error: %s", err.Error())
 		}
 		return NewGitea(c)
+	case "file":
+		c, err := ConvertToBackupProviderConfig[FileBackupConfig](conf.Config)
+		if err != nil {
+			log.Fatalf("convert file config error: %s", err.Error())
+		}
+		return NewFileBackup(c)
 	}
 	return nil
 
@@ -44,7 +50,11 @@ func runBackupTask(conf *SyncConfig) {
 		}
 		provider := BackupProviderBuilder(target.Backup)
 		for _, repo := range repos {
-			s, e := provider.MigrateRepo(target.Owner, target.RepoOwner, target.Token, repo)
+			s, e := provider.MigrateRepo(
+				target.Owner, target.RepoOwner,
+				repo.Name, repo.Description,
+				target.Token,
+			)
 			if e != nil {
 				log.Printf("migrate %s error: %s", repo.Name, e.Error())
 			} else {

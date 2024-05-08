@@ -35,19 +35,6 @@ type GiteaConf struct {
 	AuthUsername string `json:"auth_username"`
 }
 
-func NewGiteaConf(raw any) *GiteaConf {
-	b, err := json.Marshal(raw)
-	if err != nil {
-		return nil
-	}
-	var conf GiteaConf
-	err = json.Unmarshal(b, &conf)
-	if err != nil {
-		return nil
-	}
-	return &conf
-}
-
 type Gitea struct {
 	conf *GiteaConf
 }
@@ -56,7 +43,7 @@ func NewGitea(conf *GiteaConf) *Gitea {
 	return &Gitea{conf: conf}
 }
 
-func (g *Gitea) LoadRepos(owner string) ([]Repo, error) {
+func (g *Gitea) LoadRepos(owner string) ([]string, error) {
 	url := fmt.Sprintf("%s/api/v1/user/repos", g.conf.Host)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -68,17 +55,23 @@ func (g *Gitea) LoadRepos(owner string) ([]Repo, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	var repos []Repo
+	var repos []struct {
+		Name string `json:"name"`
+	}
 	err = json.NewDecoder(resp.Body).Decode(&repos)
 	if err != nil {
 		return nil, err
 	}
-	return repos, nil
+	var res []string
+	for _, repo := range repos {
+		res = append(res, repo.Name)
+	}
+	return res, nil
 }
 
-func (g *Gitea) MigrateRepo(owner, repoOwner, githubToken string, repo Repo) (string, error) {
+func (g *Gitea) MigrateRepo(owner, repoOwner string, repoName, repoDesc string, githubToken string) (string, error) {
 	r := giteaMigrateRequest{
-		Description:    repo.Description,
+		Description:    repoDesc,
 		Private:        true,
 		PullRequests:   false,
 		Uid:            0,
@@ -92,8 +85,8 @@ func (g *Gitea) MigrateRepo(owner, repoOwner, githubToken string, repo Repo) (st
 		MirrorInterval: "10m0s",
 		RepoOwner:      repoOwner,
 		Service:        "github",
-		RepoName:       repo.Name,
-		CloneAddr:      fmt.Sprintf("https://github.com/%s/%s.git", owner, repo.Name),
+		RepoName:       repoName,
+		CloneAddr:      fmt.Sprintf("https://github.com/%s/%s.git", owner, repoName),
 		Mirror:         true,
 		Lfs:            false,
 	}
@@ -143,11 +136,11 @@ func (g *Gitea) DeleteAllRepos(owner string) {
 			break
 		}
 		for _, repo := range repos {
-			resp, e := g.DeleteRepo(owner, repo.Name)
+			resp, e := g.DeleteRepo(owner, repo)
 			if e != nil {
-				log.Printf("delete %s error: %e", repo.Name, e)
+				log.Printf("delete %s error: %e", repo, e)
 			} else {
-				log.Printf("delete %s success: %s", repo.Name, resp)
+				log.Printf("delete %s success: %s", repo, resp)
 			}
 		}
 	}

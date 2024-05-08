@@ -43,6 +43,19 @@ type SyncConfig struct {
 	Targets      []GithubConfig `json:"targets"`
 }
 
+func ConvertToBackupProviderConfig[T any](raw any) (*T, error) {
+	b, err := json.Marshal(raw)
+	if err != nil {
+		return nil, err
+	}
+	var conf T
+	err = json.Unmarshal(b, &conf)
+	if err != nil {
+		return nil, err
+	}
+	return &conf, nil
+}
+
 func LoadConfig(path string) (*SyncConfig, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
