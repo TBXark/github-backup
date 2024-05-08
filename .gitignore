@@ -30,3 +30,4 @@ config.json
 build/
 .idea
 .vscode
+backup/

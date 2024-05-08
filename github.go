@@ -20,7 +20,9 @@ func (g *Github) loadRepos(owner string, perPage, page int) ([]Repo, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", g.Token))
+	if g.Token != "" {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", g.Token))
+	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -50,4 +52,30 @@ func (g *Github) LoadRepos(owner string) ([]Repo, error) {
 		page++
 	}
 	return res, nil
+}
+
+func GithubRequest(method, path, token string, handler func(*http.Response) error) error {
+	url := fmt.Sprintf("https://api.github.com/%s", path)
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return err
+	}
+	if token != "" {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("request %s error: %s", path, resp.Status)
+	}
+	defer resp.Body.Close()
+	return handler(resp)
+}
+
+func GithubRequestJson[T any](method, path, token string, res *T) error {
+	return GithubRequest(method, path, token, func(resp *http.Response) error {
+		return json.NewDecoder(resp.Body).Decode(res)
+	})
 }

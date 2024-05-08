@@ -20,6 +20,7 @@ type FileHistory map[string]map[string]RepoFile
 type FileBackupConfig struct {
 	Dir     string `json:"dir"`
 	History string `json:"history"`
+	Debug   bool   `json:"debug"`
 }
 
 type FileBackup struct {
@@ -76,23 +77,25 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, repoName, repoDesc str
 		r = repos[owner][repoName]
 	}
 
+	dirPath := path.Join(f.conf.Dir, repoOwner)
+	if _, e := os.Stat(f.conf.Dir); os.IsNotExist(e) {
+		if me := os.MkdirAll(f.conf.Dir, 0755); me != nil {
+			return "", me
+		}
+	}
+	if _, e := os.Stat(dirPath); os.IsNotExist(e) {
+		if me := os.MkdirAll(dirPath, 0755); me != nil {
+			return "", me
+		}
+	}
+
 	// get repo info from GitHub
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repoName)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken))
-	req.Header.Add("Accept", "application/vnd.github+json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
+	url := fmt.Sprintf("repos/%s/%s", owner, repoName)
 	var info struct {
 		DefaultBranch string `json:"default_branch"`
-		UpdateAt      string `json:"update_at"`
+		UpdateAt      string `json:"updated_at"`
 	}
-	err = json.NewDecoder(resp.Body).Decode(&info)
+	err = GithubRequestJson("GET", url, githubToken, &info)
 	if err != nil {
 		return "", err
 	}
@@ -111,28 +114,36 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, repoName, repoDesc str
 	}
 
 	// download file
-	url = fmt.Sprintf("https://api.github.com/repos/%s/%s/tarball/%s", owner, repoName, info.DefaultBranch)
-	req, err = http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", err
+	url = fmt.Sprintf("repos/%s/%s/tarball/%s", owner, repoName, info.DefaultBranch)
+	if f.conf.Debug {
+		tarFile, wErr := os.Create(filePath)
+		if wErr != nil {
+			return "", wErr
+		}
+		defer tarFile.Close()
+		// write url to file
+		_, wErr = tarFile.WriteString(url)
+		if wErr != nil {
+			return "", wErr
+		}
+	} else {
+		dErr := GithubRequest("GET", url, githubToken, func(resp *http.Response) error {
+			tarFile, wErr := os.Create(filePath)
+			if wErr != nil {
+				return wErr
+			}
+			defer tarFile.Close()
+			_, wErr = io.Copy(tarFile, resp.Body)
+			if wErr != nil {
+				return wErr
+			}
+			return nil
+		})
+		if dErr != nil {
+			return "", dErr
+		}
+		return fmt.Sprintf("file %s downloaded", filePath), nil
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken))
-	req.Header.Add("Accept", "application/vnd.github+json")
-	resp, err = http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	tarFile, err := os.Create(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer tarFile.Close()
-	_, err = io.Copy(tarFile, resp.Body)
-	if err != nil {
-		return "", err
-	}
-
 	// update history
 	r.File = filePath
 	r.UpdateAt = info.UpdateAt

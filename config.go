@@ -24,6 +24,9 @@ type GithubConfig struct {
 }
 
 func (c *GithubConfig) MergeDefault(defaultConf *DefaultConfig) {
+	if defaultConf == nil {
+		return
+	}
 	if c.Token == "" {
 		c.Token = defaultConf.GithubToken
 	}

@@ -8,6 +8,10 @@ GO_BUILD=CGO_ENABLED=0 go build -ldflags "-X main.BuildVersion=$(BUILD)"
 build:
 	$(GO_BUILD) -o ./build/$(CURRENT_OS)_$(CURRENT_ARCH)/ ./...
 
+.PHONY: run
+run:
+	go run main.go
+
 .PHONY: buildLinuxX86
 buildLinuxX86:
 	GOOS=linux GOARCH=amd64 $(GO_BUILD) -o ./build/linux_x86/ ./...
