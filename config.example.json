@@ -1,0 +1,25 @@
+{
+  "host": "",
+  "gitea_token": "",
+  "auth_username": "",
+  "default_conf": {
+    "github_token": "",
+    "repo_owner": "",
+    "backup": {
+      "type": "",
+      "config": {
+        "host": "a",
+        "token": "b",
+        "auth_username": "c"
+      }
+    }
+  },
+  "targets": [
+    {
+      "owner": "",
+      "token": "",
+      "repo_owner": "",
+      "backup": null
+    }
+  ]
+}
