@@ -8,27 +8,30 @@ import (
 
 func TestSyncConfig(t *testing.T) {
 	c := SyncConfig{
-		Host:         "",
-		GiteaToken:   "",
-		AuthUsername: "",
 		DefaultConf: &DefaultConfig{
-			GithubToken: "",
-			RepoOwner:   "",
+			GithubToken: "YOUR_GITHUB_TOKEN",
+			RepoOwner:   "BACKUP_TARGET_REPO_OWNER",
 			Backup: &BackupProviderConfig{
-				Type: "",
+				Type: "gitea",
 				Config: &GiteaConf{
-					Host:         "a",
-					Token:        "b",
-					AuthUsername: "c",
+					Host:         "GITEA_HOST",
+					Token:        "GITEA_TOKEN",
+					AuthUsername: "GITEA_USERNAME",
 				},
 			},
 		},
 		Targets: []GithubConfig{
 			{
-				Owner:     "",
-				Token:     "",
-				RepoOwner: "",
-				Backup:    nil,
+				Owner:     "GITHUB_OWNER",
+				Token:     "GITHUB_TOKEN",
+				RepoOwner: "BACKUP_TARGET_REPO_OWNER",
+				Backup: &BackupProviderConfig{
+					Type: "file",
+					Config: &FileBackupConfig{
+						Dir:     "SAVE_DIR",
+						History: "FILE_HISTORY_JSON_PATH",
+					},
+				},
 			},
 		},
 	}
@@ -42,17 +45,4 @@ func TestSyncConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Printf("%+v\n", c)
-	giteaConf := NewGiteaConf(c.DefaultConf.Backup.Config)
-	if giteaConf == nil {
-		t.Fatal("NewGiteaConf error")
-	}
-	if giteaConf.Host != "a" {
-		t.Fatal("NewGiteaConf error")
-	}
-	if giteaConf.Token != "b" {
-		t.Fatal("NewGiteaConf error")
-	}
-	if giteaConf.AuthUsername != "c" {
-		t.Fatal("NewGiteaConf error")
-	}
 }

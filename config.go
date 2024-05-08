@@ -36,11 +36,8 @@ func (c *GithubConfig) MergeDefault(defaultConf *DefaultConfig) {
 }
 
 type SyncConfig struct {
-	Host         string         `json:"host"`
-	GiteaToken   string         `json:"gitea_token"`
-	AuthUsername string         `json:"auth_username"`
-	DefaultConf  *DefaultConfig `json:"default_conf"`
-	Targets      []GithubConfig `json:"targets"`
+	DefaultConf *DefaultConfig `json:"default_conf"`
+	Targets     []GithubConfig `json:"targets"`
 }
 
 func ConvertToBackupProviderConfig[T any](raw any) (*T, error) {

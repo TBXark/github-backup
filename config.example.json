@@ -1,25 +1,28 @@
 {
-  "host": "",
-  "gitea_token": "",
-  "auth_username": "",
   "default_conf": {
-    "github_token": "",
-    "repo_owner": "",
+    "github_token": "YOUR_GITHUB_TOKEN",
+    "repo_owner": "BACKUP_TARGET_REPO_OWNER",
     "backup": {
-      "type": "",
+      "type": "gitea",
       "config": {
-        "host": "a",
-        "token": "b",
-        "auth_username": "c"
+        "host": "GITEA_HOST",
+        "token": "GITEA_TOKEN",
+        "auth_username": "GITEA_USERNAME"
       }
     }
   },
   "targets": [
     {
-      "owner": "",
-      "token": "",
-      "repo_owner": "",
-      "backup": null
+      "owner": "GITHUB_OWNER",
+      "token": "GITHUB_TOKEN",
+      "repo_owner": "BACKUP_TARGET_REPO_OWNER",
+      "backup": {
+        "type": "file",
+        "config": {
+          "dir": "SAVE_DIR",
+          "history": "FILE_HISTORY_JSON_PATH"
+        }
+      }
     }
   ]
 }
