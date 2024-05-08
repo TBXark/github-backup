@@ -6,8 +6,8 @@ Backup all github repos, (This is a [zx](https://github.com/google/zx) based scr
 ### Quick usage
 
 ```shell
-npx zx https://cdn.jsdelivr.net/gh/tbxark/github-backup/backup.mjs
-npx zx https://cdn.jsdelivr.net/gh/tbxark/github-backup/mirror.mjs
+npx zx https://cdn.jsdelivr.net/gh/tbxark/github-backup/legacy/backup.mjs
+npx zx https://cdn.jsdelivr.net/gh/tbxark/github-backup/legacy/mirror.mjs
 ```
 
 
@@ -17,8 +17,8 @@ npx zx https://cdn.jsdelivr.net/gh/tbxark/github-backup/mirror.mjs
 ```shell
 npm i -g zx
 
-wget https://cdn.jsdelivr.net/gh/tbxark/github-backup/backup.mjs
-wget https://cdn.jsdelivr.net/gh/tbxark/github-backup/mirror.mjs
+wget https://cdn.jsdelivr.net/gh/tbxark/github-backup/legacy/backup.mjs
+wget https://cdn.jsdelivr.net/gh/tbxark/github-backup/legacy/mirror.mjs
 
 chmod +x backup.mjs mirror.mjs
 
