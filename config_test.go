@@ -47,6 +47,12 @@ func TestSyncConfig(t *testing.T) {
 					UnmatchedRepoAction: UnmatchedRepoActionIgnore,
 				},
 			},
+			{
+				Owner:          "GITHUB_ORG",
+				RepoOwner:      "BACKUP_TARGET_REPO_ORG",
+				IsOwnerOrg:     true,
+				IsRepoOwnerOrg: true,
+			},
 		},
 	}
 	bytes, err := json.MarshalIndent(c, "", "  ")

@@ -1,8 +1,6 @@
 # github backup
 
-A simple tool to back up GitHub repository to gitea or other provider.
-
-Legacy javascript version can be found [here](./legacy/README.md)
+A simple tool to backup github repository to gitea or other provider.
 
 ### Installation
 
@@ -64,6 +62,16 @@ github-backup --config config.json
         // Deny rules, repositories that match the rules will not be backed up
         "deny_rule": []
       }
+    },
+    {
+      // The organization to be backed up
+      "owner": "GITHUB_ORG",
+      // Set is_owner_org to true when the owner is an organization
+      "is_owner_org": true,
+      // The backup target organization 
+      "repo_owner": "BACKUP_TARGET_REPO_ORG",
+      // Set is_repo_owner_org to true when the backup target is an organization
+      "is_repo_owner_org": true,
     }
   ],
   // Default configuration, will be used if the target configuration is not sets

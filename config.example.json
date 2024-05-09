@@ -38,6 +38,15 @@
         "allow_rule": null,
         "deny_rule": null
       }
+    },
+    {
+      "owner": "GITHUB_ORG",
+      "token": "",
+      "is_owner_org": true,
+      "repo_owner": "BACKUP_TARGET_REPO_ORG",
+      "is_repo_owner_org": true,
+      "backup": null,
+      "filter": null
     }
   ]
 }
