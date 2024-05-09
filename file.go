@@ -9,14 +9,6 @@ import (
 	"path"
 )
 
-type RepoFile struct {
-	File        string `json:"file"`
-	Description string `json:"description"`
-	UpdateAt    string `json:"update_at"`
-}
-
-type FileHistory map[string]map[string]RepoFile
-
 type FileBackupConfig struct {
 	Dir     string `json:"dir"`
 	History string `json:"history"`
@@ -24,104 +16,22 @@ type FileBackupConfig struct {
 }
 
 type FileBackup struct {
-	conf *FileBackupConfig
-	his  FileHistory
+	conf    *FileBackupConfig
+	history *fileHistory
 }
 
-func NewFileBackup(conf *FileBackupConfig) *FileBackup {
-	return &FileBackup{conf: conf}
-}
-
-func (f *FileBackup) loadHistory() (FileHistory, error) {
-	if f.his != nil {
-		return f.his, nil
-	}
-	if _, err := os.Stat(f.conf.History); os.IsNotExist(err) {
-		f.his = make(FileHistory)
-		return f.his, nil
-	}
-	file, err := os.ReadFile(f.conf.History)
+func NewFileBackup(conf *FileBackupConfig) (*FileBackup, error) {
+	his, err := newFileHistory(conf.History)
 	if err != nil {
 		return nil, err
 	}
-	var repos FileHistory
-	err = json.Unmarshal(file, &repos)
-	if err != nil {
-		return nil, err
-	}
-	f.his = repos
-	return f.his, nil
-}
-
-func (f *FileBackup) syncHistory() error {
-	file, err := json.MarshalIndent(f.his, "", "  ")
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(f.conf.History, file, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (f *FileBackup) loadRepoHistory(owner, repo string) (*RepoFile, error) {
-	repos, err := f.loadHistory()
-	if err != nil {
-		return nil, err
-	}
-	var r RepoFile
-	if _, ok := repos[owner]; !ok {
-		repos[owner] = make(map[string]RepoFile)
-	}
-	if _, ok := repos[owner][repo]; !ok {
-		r = RepoFile{}
-	} else {
-		r = repos[owner][repo]
-	}
-	return &r, nil
-}
-
-func (f *FileBackup) updateRepoHistory(owner, repo string, file RepoFile) error {
-	repos, err := f.loadHistory()
-	if err != nil {
-		return err
-	}
-	if _, ok := repos[owner]; !ok {
-		repos[owner] = make(map[string]RepoFile)
-	}
-	repos[owner][repo] = file
-	err = f.syncHistory()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (f *FileBackup) deleteRepoHistory(owner, repo string) error {
-	repos, err := f.loadHistory()
-	if err != nil {
-		return err
-	}
-	delete(repos[owner], repo)
-	err = f.syncHistory()
-	if err != nil {
-		return err
-	}
-	return nil
+	return &FileBackup{conf: conf, history: his}, nil
 }
 
 func (f *FileBackup) LoadRepos(owner string, isOrg bool) ([]string, error) {
-	repos, err := f.loadHistory()
-	if err != nil {
-		return nil, err
-	}
-	uRepos, ok := repos[owner]
-	if !ok {
-		return nil, nil
-	}
+	repos := f.history.loadRepos(owner)
 	var res []string
-	for k, _ := range uRepos {
+	for k, _ := range repos {
 		res = append(res, k)
 	}
 	return res, nil
@@ -130,10 +40,7 @@ func (f *FileBackup) LoadRepos(owner string, isOrg bool) ([]string, error) {
 func (f *FileBackup) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwnerOrg bool, repoName, repoDesc string, githubToken string) (string, error) {
 
 	// load history
-	r, err := f.loadRepoHistory(owner, repoName)
-	if err != nil {
-		return "", err
-	}
+	r := f.history.loadRepoHistory(owner, repoName)
 
 	// create dir if not exist
 	dirPath := path.Join(f.conf.Dir, repoOwner)
@@ -154,7 +61,7 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwne
 		DefaultBranch string `json:"default_branch"`
 		UpdateAt      string `json:"updated_at"`
 	}
-	err = GithubRequestJson("GET", url, githubToken, &info)
+	err := GithubRequestJson("GET", url, githubToken, &info)
 	if err != nil {
 		return "", err
 	}
@@ -208,7 +115,7 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwne
 	r.File = filePath
 	r.UpdateAt = info.UpdateAt
 	r.Description = repoDesc
-	err = f.updateRepoHistory(owner, repoName, *r)
+	err = f.history.updateRepoHistory(owner, repoName, *r)
 	if err != nil {
 		return "", err
 	}
@@ -216,17 +123,88 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwne
 }
 
 func (f *FileBackup) DeleteRepo(owner, repo string) (string, error) {
-	r, err := f.loadRepoHistory(owner, repo)
+	r := f.history.loadRepoHistory(owner, repo)
+	err := os.RemoveAll(r.File)
 	if err != nil {
 		return "", err
 	}
-	err = os.RemoveAll(r.File)
-	if err != nil {
-		return "", err
-	}
-	err = f.deleteRepoHistory(owner, repo)
+	err = f.history.deleteRepoHistory(owner, repo)
 	if err != nil {
 		return "", err
 	}
 	return "success", nil
+}
+
+// FileHistory is a struct to store the history of the file
+
+type repoFile struct {
+	File        string `json:"file"`
+	Description string `json:"description"`
+	UpdateAt    string `json:"update_at"`
+}
+
+type fileHistory struct {
+	path  string
+	store map[string]map[string]repoFile
+}
+
+func newFileHistory(p string) (*fileHistory, error) {
+	f := &fileHistory{path: p}
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		f.store = make(map[string]map[string]repoFile)
+		return f, nil
+	}
+	file, err := os.ReadFile(p)
+	if err != nil {
+		return nil, err
+	}
+	var repos map[string]map[string]repoFile
+	err = json.Unmarshal(file, &repos)
+	if err != nil {
+		return nil, err
+	}
+	f.store = repos
+	return f, nil
+}
+
+func (f *fileHistory) sync() error {
+	file, err := json.MarshalIndent(f, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(f.path, file, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (f *fileHistory) loadRepos(owner string) map[string]repoFile {
+	return f.store[owner]
+}
+
+func (f *fileHistory) loadRepoHistory(owner, repo string) *repoFile {
+	var r repoFile
+	if _, ok := f.store[owner]; !ok {
+		f.store[owner] = make(map[string]repoFile)
+	}
+	if _, ok := f.store[owner][repo]; !ok {
+		r = repoFile{}
+	} else {
+		r = f.store[owner][repo]
+	}
+	return &r
+}
+
+func (f *fileHistory) updateRepoHistory(owner, repo string, file repoFile) error {
+	if _, ok := f.store[owner]; !ok {
+		f.store[owner] = make(map[string]repoFile)
+	}
+	f.store[owner][repo] = file
+	return f.sync()
+}
+
+func (f *fileHistory) deleteRepoHistory(owner, repo string) error {
+	delete(f.store[owner], repo)
+	return f.sync()
 }

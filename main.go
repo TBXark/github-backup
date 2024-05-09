@@ -21,14 +21,14 @@ type BackupProvider interface {
 	DeleteRepo(owner, repo string) (string, error)
 }
 
-func BuildBackupProvider(conf *BackupProviderConfig) BackupProvider {
+func BuildBackupProvider(conf *BackupProviderConfig) (BackupProvider, error) {
 	switch conf.Type {
 	case BackupProviderConfigTypeGitea:
 		c, err := ConvertToBackupProviderConfig[GiteaConf](conf.Config)
 		if err != nil {
-			log.Fatalf("convert gitea config error: %s", err.Error())
+			return nil, err
 		}
-		return NewGitea(c)
+		return NewGitea(c), nil
 	case BackupProviderConfigTypeFile:
 		c, err := ConvertToBackupProviderConfig[FileBackupConfig](conf.Config)
 		if err != nil {
@@ -36,35 +36,59 @@ func BuildBackupProvider(conf *BackupProviderConfig) BackupProvider {
 		}
 		return NewFileBackup(c)
 	}
-	return nil
+	return nil, fmt.Errorf("unknown backup provider type: %s", conf.Type)
 }
 
 func runBackupTask(conf *SyncConfig) {
 	for _, target := range conf.Targets {
+
+		// merge default config
 		target.MergeDefault(conf.DefaultConf)
 
+		// load all github repos
 		github := NewGithub(target.Token)
-		repos, tErr := github.LoadAllRepos(target.Owner, target.IsOwnerOrg)
-		if tErr != nil {
-			log.Panicf("load %s repos error: %s", target.RepoOwner, tErr.Error())
+		repos, err := github.LoadAllRepos(target.Owner, target.IsOwnerOrg)
+		if err != nil {
+			log.Panicf("load %s repos error: %s", target.RepoOwner, err.Error())
 		}
 
-		provider := BuildBackupProvider(target.Backup)
+		// build backup provider
+		provider, err := BuildBackupProvider(target.Backup)
+		if err != nil {
+			log.Panicf("build backup provider error: %s", err.Error())
+		}
+
+		// handle repos set
 		handledRepos := make(map[string]struct{})
 
 		for _, repo := range repos {
-			desc := RepoDescription(target.Owner, repo.Name, repo.Private, repo.Fork, repo.Archived)
-			if !IsMatchRepoDescription(desc, target.Filter.AllowRule...) {
-				if IsMatchRepoDescription(desc, target.Filter.DenyRule...) {
+			// render repo identity
+			identity := RepoIdentity(target.Owner, repo.Name, repo.Private, repo.Fork, repo.Archived)
+
+			// check allow/deny rule
+			if !IsMatchRepoIdentity(identity, target.Filter.AllowRule...) {
+				if IsMatchRepoIdentity(identity, target.Filter.DenyRule...) {
 					continue
 				}
 			}
+
+			githubToken := target.Token
+			// check specific GitHub token for this repo by regex
+			for k, v := range target.SpecificGithubToken {
+				if IsMatchRepoIdentity(identity, k) {
+					githubToken = v
+					break
+				}
+			}
+
+			// migrate repo
 			s, e := provider.MigrateRepo(
 				target.Owner, target.RepoOwner,
 				target.IsOwnerOrg, target.IsRepoOwnerOrg,
 				repo.Name, repo.Description,
-				target.Token,
+				githubToken,
 			)
+
 			if e != nil {
 				log.Printf("migrate %s error: %s", repo.Name, e.Error())
 			} else {
@@ -73,11 +97,16 @@ func runBackupTask(conf *SyncConfig) {
 			handledRepos[repo.Name] = struct{}{}
 		}
 
+		// delete unmatched repos if needed
 		if target.Filter.UnmatchedRepoAction == UnmatchedRepoActionDelete {
+
+			// load local repos
 			localRepos, lErr := provider.LoadRepos(target.RepoOwner, target.IsRepoOwnerOrg)
 			if lErr != nil {
 				log.Panicf("load %s repos error: %s", target.RepoOwner, lErr.Error())
 			}
+
+			// delete unmatched repos
 			for _, repo := range localRepos {
 				if _, ok := handledRepos[repo]; !ok {
 					s, e := provider.DeleteRepo(target.RepoOwner, repo)

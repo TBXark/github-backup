@@ -25,20 +25,22 @@ type BackupProviderConfig struct {
 }
 
 type DefaultConfig struct {
-	GithubToken string                `json:"github_token"`
-	RepoOwner   string                `json:"repo_owner"`
-	Backup      *BackupProviderConfig `json:"backup"`
-	Filter      *FilterConfig         `json:"filter"`
+	GithubToken         string                `json:"github_token"`
+	RepoOwner           string                `json:"repo_owner"`
+	Backup              *BackupProviderConfig `json:"backup"`
+	Filter              *FilterConfig         `json:"filter"`
+	SpecificGithubToken map[string]string     `json:"specific_github_token"`
 }
 
 type GithubConfig struct {
-	Owner          string                `json:"owner"`
-	Token          string                `json:"token"`
-	IsOwnerOrg     bool                  `json:"is_owner_org"`
-	RepoOwner      string                `json:"repo_owner"`
-	IsRepoOwnerOrg bool                  `json:"is_repo_owner_org"`
-	Backup         *BackupProviderConfig `json:"backup"`
-	Filter         *FilterConfig         `json:"filter"`
+	Owner               string                `json:"owner"`
+	Token               string                `json:"token"`
+	IsOwnerOrg          bool                  `json:"is_owner_org"`
+	RepoOwner           string                `json:"repo_owner"`
+	IsRepoOwnerOrg      bool                  `json:"is_repo_owner_org"`
+	Backup              *BackupProviderConfig `json:"backup"`
+	Filter              *FilterConfig         `json:"filter"`
+	SpecificGithubToken map[string]string     `json:"specific_github_token"`
 }
 
 type FilterConfig struct {
@@ -74,6 +76,15 @@ func (c *GithubConfig) MergeDefault(defaultConf *DefaultConfig) {
 		if c.Filter.UnmatchedRepoAction == "" {
 			c.Filter.UnmatchedRepoAction = UnmatchedRepoActionIgnore
 		}
+	}
+	if len(c.Filter.AllowRule) == 0 {
+		c.Filter.AllowRule = defaultConf.Filter.AllowRule
+	}
+	if len(c.Filter.DenyRule) == 0 {
+		c.Filter.DenyRule = defaultConf.Filter.DenyRule
+	}
+	if len(c.SpecificGithubToken) == 0 {
+		c.SpecificGithubToken = defaultConf.SpecificGithubToken
 	}
 }
 

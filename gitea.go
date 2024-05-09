@@ -9,27 +9,6 @@ import (
 	"strings"
 )
 
-type giteaMigrateRequest struct {
-	Description    string `json:"description"`
-	Private        bool   `json:"private"`
-	PullRequests   bool   `json:"pull_requests"`
-	Uid            int    `json:"uid"`
-	AuthUsername   string `json:"auth_username"`
-	AuthToken      string `json:"auth_token"`
-	Issues         bool   `json:"issues"`
-	Labels         bool   `json:"labels"`
-	Milestones     bool   `json:"milestones"`
-	Wiki           bool   `json:"wiki"`
-	Releases       bool   `json:"releases"`
-	MirrorInterval string `json:"mirror_interval"`
-	RepoOwner      string `json:"repo_owner"`
-	Service        string `json:"service"`
-	RepoName       string `json:"repo_name"`
-	CloneAddr      string `json:"clone_addr"`
-	Mirror         bool   `json:"mirror"`
-	Lfs            bool   `json:"lfs"`
-}
-
 type GiteaConf struct {
 	Host         string `json:"host"`
 	Token        string `json:"token"`
@@ -174,4 +153,25 @@ func (g *Gitea) DeleteAllRepos(owner string, isOrg bool) {
 			}
 		}
 	}
+}
+
+type giteaMigrateRequest struct {
+	Description    string `json:"description"`
+	Private        bool   `json:"private"`
+	PullRequests   bool   `json:"pull_requests"`
+	Uid            int    `json:"uid"`
+	AuthUsername   string `json:"auth_username"`
+	AuthToken      string `json:"auth_token"`
+	Issues         bool   `json:"issues"`
+	Labels         bool   `json:"labels"`
+	Milestones     bool   `json:"milestones"`
+	Wiki           bool   `json:"wiki"`
+	Releases       bool   `json:"releases"`
+	MirrorInterval string `json:"mirror_interval"`
+	RepoOwner      string `json:"repo_owner"`
+	Service        string `json:"service"`
+	RepoName       string `json:"repo_name"`
+	CloneAddr      string `json:"clone_addr"`
+	Mirror         bool   `json:"mirror"`
+	Lfs            bool   `json:"lfs"`
 }
