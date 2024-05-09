@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type giteaMigrateRequest struct {
@@ -43,8 +44,12 @@ func NewGitea(conf *GiteaConf) *Gitea {
 	return &Gitea{conf: conf}
 }
 
-func (g *Gitea) LoadRepos(owner string) ([]string, error) {
+func (g *Gitea) loadReposPage(owner string, perPage, page int, isOrg bool) ([]string, error) {
 	url := fmt.Sprintf("%s/api/v1/user/repos", g.conf.Host)
+	if isOrg {
+		url = fmt.Sprintf("%s/api/v1/orgs/%s/repos", g.conf.Host, owner)
+	}
+	url = fmt.Sprintf("%s?per_page=%d&page=%d", url, perPage, page)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -56,20 +61,45 @@ func (g *Gitea) LoadRepos(owner string) ([]string, error) {
 	}
 	defer resp.Body.Close()
 	var repos []struct {
-		Name string `json:"name"`
+		Name  string `json:"name"`
+		Owner struct {
+			Login string `json:"login"`
+		} `json:"owner"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&repos)
 	if err != nil {
 		return nil, err
 	}
 	var res []string
+	ownerLower := strings.ToLower(owner)
 	for _, repo := range repos {
+		if strings.ToLower(repo.Owner.Login) != ownerLower {
+			continue
+		}
 		res = append(res, repo.Name)
 	}
 	return res, nil
 }
 
-func (g *Gitea) MigrateRepo(owner, repoOwner string, repoName, repoDesc string, githubToken string) (string, error) {
+func (g *Gitea) LoadRepos(owner string, isOrg bool) ([]string, error) {
+	perPage := 100
+	page := 1
+	res := make([]string, 0)
+	for {
+		repos, err := g.loadReposPage(owner, perPage, page, isOrg)
+		if err != nil {
+			break
+		}
+		if len(repos) == 0 {
+			break
+		}
+		res = append(res, repos...)
+		page++
+	}
+	return res, nil
+}
+
+func (g *Gitea) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwnerOrg bool, repoName, repoDesc string, githubToken string) (string, error) {
 	r := giteaMigrateRequest{
 		Description:    repoDesc,
 		Private:        true,
@@ -126,9 +156,9 @@ func (g *Gitea) DeleteRepo(owner, repo string) (string, error) {
 	return resp.Status, nil
 }
 
-func (g *Gitea) DeleteAllRepos(owner string) {
+func (g *Gitea) DeleteAllRepos(owner string, isOrg bool) {
 	for {
-		repos, err := g.LoadRepos(owner)
+		repos, err := g.LoadRepos(owner, isOrg)
 		if err != nil {
 			log.Panicf("get all repos error: %e", err)
 		}

@@ -32,11 +32,13 @@ type DefaultConfig struct {
 }
 
 type GithubConfig struct {
-	Owner     string                `json:"owner"`
-	Token     string                `json:"token"`
-	RepoOwner string                `json:"repo_owner"`
-	Backup    *BackupProviderConfig `json:"backup"`
-	Filter    *FilterConfig         `json:"filter"`
+	Owner          string                `json:"owner"`
+	Token          string                `json:"token"`
+	IsOwnerOrg     bool                  `json:"is_owner_org"`
+	RepoOwner      string                `json:"repo_owner"`
+	IsRepoOwnerOrg bool                  `json:"is_repo_owner_org"`
+	Backup         *BackupProviderConfig `json:"backup"`
+	Filter         *FilterConfig         `json:"filter"`
 }
 
 type FilterConfig struct {

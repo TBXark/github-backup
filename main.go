@@ -11,8 +11,13 @@ var (
 )
 
 type BackupProvider interface {
-	LoadRepos(owner string) ([]string, error)
-	MigrateRepo(owner, repoOwner string, repoName, repoDesc string, githubToken string) (string, error)
+	LoadRepos(owner string, isOrg bool) ([]string, error)
+	MigrateRepo(
+		owner, repoOwner string,
+		isOwnerOrg, isRepoOwnerOrg bool,
+		repoName, repoDesc string,
+		githubToken string,
+	) (string, error)
 	DeleteRepo(owner, repo string) (string, error)
 }
 
@@ -39,7 +44,7 @@ func runBackupTask(conf *SyncConfig) {
 		target.MergeDefault(conf.DefaultConf)
 
 		github := NewGithub(target.Token)
-		repos, tErr := github.LoadAllRepos(target.Owner)
+		repos, tErr := github.LoadAllRepos(target.Owner, target.IsOwnerOrg)
 		if tErr != nil {
 			log.Panicf("load %s repos error: %s", target.RepoOwner, tErr.Error())
 		}
@@ -56,6 +61,7 @@ func runBackupTask(conf *SyncConfig) {
 			}
 			s, e := provider.MigrateRepo(
 				target.Owner, target.RepoOwner,
+				target.IsOwnerOrg, target.IsRepoOwnerOrg,
 				repo.Name, repo.Description,
 				target.Token,
 			)
@@ -68,7 +74,7 @@ func runBackupTask(conf *SyncConfig) {
 		}
 
 		if target.Filter.UnmatchedRepoAction == UnmatchedRepoActionDelete {
-			localRepos, lErr := provider.LoadRepos(target.RepoOwner)
+			localRepos, lErr := provider.LoadRepos(target.RepoOwner, target.IsRepoOwnerOrg)
 			if lErr != nil {
 				log.Panicf("load %s repos error: %s", target.RepoOwner, lErr.Error())
 			}

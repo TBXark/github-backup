@@ -111,7 +111,7 @@ func (f *FileBackup) deleteRepoHistory(owner, repo string) error {
 	return nil
 }
 
-func (f *FileBackup) LoadRepos(owner string) ([]string, error) {
+func (f *FileBackup) LoadRepos(owner string, isOrg bool) ([]string, error) {
 	repos, err := f.loadHistory()
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (f *FileBackup) LoadRepos(owner string) ([]string, error) {
 	return res, nil
 }
 
-func (f *FileBackup) MigrateRepo(owner, repoOwner string, repoName, repoDesc string, githubToken string) (string, error) {
+func (f *FileBackup) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwnerOrg bool, repoName, repoDesc string, githubToken string) (string, error) {
 
 	// load history
 	r, err := f.loadRepoHistory(owner, repoName)

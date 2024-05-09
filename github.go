@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type Repo struct {
@@ -12,6 +13,9 @@ type Repo struct {
 	Private     bool   `json:"private"`
 	Fork        bool   `json:"fork"`
 	Archived    bool   `json:"archived"`
+	Owner       struct {
+		Login string `json:"login"`
+	}
 }
 
 type Github struct {
@@ -22,8 +26,12 @@ func NewGithub(token string) *Github {
 	return &Github{Token: token}
 }
 
-func (g *Github) loadRepos(owner string, perPage, page int) ([]Repo, error) {
-	url := fmt.Sprintf("https://api.github.com/users/%s/repos?per_page=%d&page=%d", owner, perPage, page)
+func (g *Github) loadReposPage(owner string, perPage, page int, isOrg bool) ([]Repo, error) {
+	url := fmt.Sprintf("https://api.github.com/users/%s/repos", owner)
+	if isOrg {
+		url = fmt.Sprintf("https://api.github.com/orgs/%s/repos", owner)
+	}
+	url = fmt.Sprintf("%s?per_page=%d&page=%d", url, perPage, page)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -41,15 +49,23 @@ func (g *Github) loadRepos(owner string, perPage, page int) ([]Repo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return repos, nil
+	ownerLower := strings.ToLower(owner)
+	var matchedRepos []Repo
+	for _, repo := range repos {
+		if strings.ToLower(repo.Owner.Login) != ownerLower {
+			continue
+		}
+		matchedRepos = append(matchedRepos, repo)
+	}
+	return matchedRepos, nil
 }
 
-func (g *Github) LoadAllRepos(owner string) ([]Repo, error) {
+func (g *Github) LoadAllRepos(owner string, isOrg bool) ([]Repo, error) {
 	perPage := 100
 	page := 1
 	res := make([]Repo, 0)
 	for {
-		repos, err := g.loadRepos(owner, perPage, page)
+		repos, err := g.loadReposPage(owner, perPage, page, isOrg)
 		if err != nil {
 			break
 		}
