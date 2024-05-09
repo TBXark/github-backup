@@ -23,11 +23,11 @@ func TestSyncConfig(t *testing.T) {
 				UnmatchedRepoAction: UnmatchedRepoActionDelete,
 				AllowRule: []string{
 					// :owner/:repo/:private/:fork/:archived
-					"[^/]+/[^/]+/0/././.",
+					"[^/]+/[^/]+/0/./.",
 				},
 				DenyRule: []string{
 					// :owner/:repo/:private/:fork/:archived
-					"[^/]+/[^/]+/1/././.",
+					"[^/]+/[^/]+/1/./.",
 				},
 			},
 		},

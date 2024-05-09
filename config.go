@@ -57,6 +57,9 @@ func (c *GithubConfig) MergeDefault(defaultConf *DefaultConfig) {
 	if c.RepoOwner == "" {
 		c.RepoOwner = defaultConf.RepoOwner
 	}
+	if c.RepoOwner == "" {
+		c.RepoOwner = c.Owner
+	}
 	if c.Backup == nil {
 		c.Backup = defaultConf.Backup
 	}

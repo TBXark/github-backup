@@ -57,10 +57,10 @@ github-backup --config config.json
         "unmatched_repo_action": "ignore",
         // Allow rules, only repositories that match the rules will be backed up
         // The rule is a regular expression, the format is :owner/:repo/:private/:fork/:archived
-        // For example, the rule [^/]+/[^/]+/0/././. means that only public repositories will be backed up
-        "allow_rule": [],
+        // For example, the rule [^/]+/[^/]+/0/./. means that only public repositories will be backed up
+        "allow_rule": ["[^/]+/[^/]+/0/./."],
         // Deny rules, repositories that match the rules will not be backed up
-        "deny_rule": []
+        "deny_rule": ["[^/]+/[^/]+/1/./."]
       }
     },
     {
@@ -92,8 +92,8 @@ github-backup --config config.json
     },
     "filter": {
       "unmatched_repo_action": "delete",
-      "allow_rule": ["[^/]+/[^/]+/0/././."],
-      "deny_rule": ["[^/]+/[^/]+/1/././."]
+      "allow_rule": [],
+      "deny_rule": []
     }
   }
 }

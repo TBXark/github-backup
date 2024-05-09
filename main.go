@@ -21,7 +21,7 @@ type BackupProvider interface {
 	DeleteRepo(owner, repo string) (string, error)
 }
 
-func BackupProviderBuilder(conf *BackupProviderConfig) BackupProvider {
+func BuildBackupProvider(conf *BackupProviderConfig) BackupProvider {
 	switch conf.Type {
 	case BackupProviderConfigTypeGitea:
 		c, err := ConvertToBackupProviderConfig[GiteaConf](conf.Config)
@@ -49,7 +49,7 @@ func runBackupTask(conf *SyncConfig) {
 			log.Panicf("load %s repos error: %s", target.RepoOwner, tErr.Error())
 		}
 
-		provider := BackupProviderBuilder(target.Backup)
+		provider := BuildBackupProvider(target.Backup)
 		handledRepos := make(map[string]struct{})
 
 		for _, repo := range repos {
