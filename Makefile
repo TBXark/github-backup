@@ -10,7 +10,11 @@ build:
 
 .PHONY: run
 run:
-	go run main.go
+	go run -ldflags "-X main.BuildVersion=$(BUILD)" .
+
+.PHONY: install
+install:
+	go install -ldflags "-X main.BuildVersion=$(BUILD)" .
 
 .PHONY: buildLinuxX86
 buildLinuxX86:
