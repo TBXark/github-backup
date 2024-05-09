@@ -77,7 +77,7 @@ func (g *Github) LoadAllRepos(owner string, isOrg bool) ([]Repo, error) {
 	for {
 		repos, err := g.loadReposPageBySearch(owner, perPage, page, isOrg)
 		if err != nil {
-			break
+			return nil, err
 		}
 		if len(repos) == 0 {
 			break
@@ -91,7 +91,7 @@ func (g *Github) LoadAllRepos(owner string, isOrg bool) ([]Repo, error) {
 	for {
 		repos, err := g.loadReposPage(owner, perPage, page, isOrg)
 		if err != nil {
-			break
+			return nil, err
 		}
 		if len(repos) == 0 {
 			break
