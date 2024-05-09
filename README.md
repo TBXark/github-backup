@@ -25,7 +25,7 @@ github-backup --config config.json
 ```
 
 
-### Config
+### Configuration
 
 ```javascript
 {
@@ -87,4 +87,9 @@ github-backup --config config.json
     }
   }
 }
+```
+
+### License
+
+**github-backup** is released under the MIT license. See [LICENSE](LICENSE) for details.
 ```
