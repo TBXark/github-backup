@@ -5,15 +5,30 @@ import (
 	"os"
 )
 
+type BackupProviderConfigType string
+
+const (
+	BackupProviderConfigTypeGitea BackupProviderConfigType = "gitea"
+	BackupProviderConfigTypeFile  BackupProviderConfigType = "file"
+)
+
+type UnmatchedRepoAction string
+
+const (
+	UnmatchedRepoActionDelete UnmatchedRepoAction = "delete"
+	UnmatchedRepoActionIgnore UnmatchedRepoAction = "ignore"
+)
+
 type BackupProviderConfig struct {
-	Type   string `json:"type"`
-	Config any    `json:"config"`
+	Type   BackupProviderConfigType `json:"type"`
+	Config any                      `json:"config"`
 }
 
 type DefaultConfig struct {
 	GithubToken string                `json:"github_token"`
 	RepoOwner   string                `json:"repo_owner"`
 	Backup      *BackupProviderConfig `json:"backup"`
+	Filter      *FilterConfig         `json:"filter"`
 }
 
 type GithubConfig struct {
@@ -21,6 +36,13 @@ type GithubConfig struct {
 	Token     string                `json:"token"`
 	RepoOwner string                `json:"repo_owner"`
 	Backup    *BackupProviderConfig `json:"backup"`
+	Filter    *FilterConfig         `json:"filter"`
+}
+
+type FilterConfig struct {
+	UnmatchedRepoAction UnmatchedRepoAction `json:"unmatched_repo_action"`
+	AllowRule           []string            `json:"allow_rule"`
+	DenyRule            []string            `json:"deny_rule"`
 }
 
 func (c *GithubConfig) MergeDefault(defaultConf *DefaultConfig) {
@@ -35,6 +57,18 @@ func (c *GithubConfig) MergeDefault(defaultConf *DefaultConfig) {
 	}
 	if c.Backup == nil {
 		c.Backup = defaultConf.Backup
+	}
+	if c.Filter == nil {
+		c.Filter = defaultConf.Filter
+		if c.Filter == nil {
+			c.Filter = &FilterConfig{}
+		}
+	}
+	if c.Filter.UnmatchedRepoAction == "" {
+		c.Filter.UnmatchedRepoAction = defaultConf.Filter.UnmatchedRepoAction
+		if c.Filter.UnmatchedRepoAction == "" {
+			c.Filter.UnmatchedRepoAction = UnmatchedRepoActionIgnore
+		}
 	}
 }
 

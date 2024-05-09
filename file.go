@@ -25,15 +25,20 @@ type FileBackupConfig struct {
 
 type FileBackup struct {
 	conf *FileBackupConfig
+	his  FileHistory
 }
 
 func NewFileBackup(conf *FileBackupConfig) *FileBackup {
 	return &FileBackup{conf: conf}
 }
 
-func (f *FileBackup) LoadHistory() (FileHistory, error) {
+func (f *FileBackup) loadHistory() (FileHistory, error) {
+	if f.his != nil {
+		return f.his, nil
+	}
 	if _, err := os.Stat(f.conf.History); os.IsNotExist(err) {
-		return make(FileHistory), nil
+		f.his = make(FileHistory)
+		return f.his, nil
 	}
 	file, err := os.ReadFile(f.conf.History)
 	if err != nil {
@@ -44,17 +49,79 @@ func (f *FileBackup) LoadHistory() (FileHistory, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return repos, nil
+	f.his = repos
+	return f.his, nil
 }
 
-func (f *FileBackup) LoadRepos(owner string) ([]string, error) {
-	repos, err := f.LoadHistory()
+func (f *FileBackup) syncHistory() error {
+	file, err := json.MarshalIndent(f.his, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(f.conf.History, file, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (f *FileBackup) loadRepoHistory(owner, repo string) (*RepoFile, error) {
+	repos, err := f.loadHistory()
 	if err != nil {
 		return nil, err
 	}
+	var r RepoFile
+	if _, ok := repos[owner]; !ok {
+		repos[owner] = make(map[string]RepoFile)
+	}
+	if _, ok := repos[owner][repo]; !ok {
+		r = RepoFile{}
+	} else {
+		r = repos[owner][repo]
+	}
+	return &r, nil
+}
+
+func (f *FileBackup) updateRepoHistory(owner, repo string, file RepoFile) error {
+	repos, err := f.loadHistory()
+	if err != nil {
+		return err
+	}
+	if _, ok := repos[owner]; !ok {
+		repos[owner] = make(map[string]RepoFile)
+	}
+	repos[owner][repo] = file
+	err = f.syncHistory()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (f *FileBackup) deleteRepoHistory(owner, repo string) error {
+	repos, err := f.loadHistory()
+	if err != nil {
+		return err
+	}
+	delete(repos[owner], repo)
+	err = f.syncHistory()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (f *FileBackup) LoadRepos(owner string) ([]string, error) {
+	repos, err := f.loadHistory()
+	if err != nil {
+		return nil, err
+	}
+	uRepos, ok := repos[owner]
+	if !ok {
+		return nil, nil
+	}
 	var res []string
-	for k, _ := range repos[owner] {
+	for k, _ := range uRepos {
 		res = append(res, k)
 	}
 	return res, nil
@@ -63,20 +130,12 @@ func (f *FileBackup) LoadRepos(owner string) ([]string, error) {
 func (f *FileBackup) MigrateRepo(owner, repoOwner string, repoName, repoDesc string, githubToken string) (string, error) {
 
 	// load history
-	repos, err := f.LoadHistory()
+	r, err := f.loadRepoHistory(owner, repoName)
 	if err != nil {
 		return "", err
 	}
-	var r RepoFile
-	if _, ok := repos[owner]; !ok {
-		repos[owner] = make(map[string]RepoFile)
-	}
-	if _, ok := repos[owner][repoName]; !ok {
-		r = RepoFile{}
-	} else {
-		r = repos[owner][repoName]
-	}
 
+	// create dir if not exist
 	dirPath := path.Join(f.conf.Dir, repoOwner)
 	if _, e := os.Stat(f.conf.Dir); os.IsNotExist(e) {
 		if me := os.MkdirAll(f.conf.Dir, 0755); me != nil {
@@ -144,16 +203,12 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, repoName, repoDesc str
 		}
 		return fmt.Sprintf("file %s downloaded", filePath), nil
 	}
+
 	// update history
 	r.File = filePath
 	r.UpdateAt = info.UpdateAt
 	r.Description = repoDesc
-	repos[owner][repoName] = r
-	reposRaw, err := json.Marshal(repos)
-	if err != nil {
-		return "", err
-	}
-	err = os.WriteFile(f.conf.History, reposRaw, 0644)
+	err = f.updateRepoHistory(owner, repoName, *r)
 	if err != nil {
 		return "", err
 	}
@@ -161,21 +216,15 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, repoName, repoDesc str
 }
 
 func (f *FileBackup) DeleteRepo(owner, repo string) (string, error) {
-	repos, err := f.LoadHistory()
-	if err != nil {
-		return "", err
-	}
-	r := repos[owner][repo]
-	delete(repos[owner], repo)
-	file, err := json.Marshal(repos)
-	if err != nil {
-		return "", err
-	}
-	err = os.WriteFile(f.conf.History, file, 0644)
+	r, err := f.loadRepoHistory(owner, repo)
 	if err != nil {
 		return "", err
 	}
 	err = os.RemoveAll(r.File)
+	if err != nil {
+		return "", err
+	}
+	err = f.deleteRepoHistory(owner, repo)
 	if err != nil {
 		return "", err
 	}

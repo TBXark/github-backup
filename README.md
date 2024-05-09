@@ -39,6 +39,15 @@ github-backup --config config.json
         "token": "GITEA_TOKEN",
         "auth_username": "GITEA_USERNAME"
       }
+    },
+    "filter": {
+      "unmatched_repo_action": "delete",
+      "allow_rule": [
+        "[^/]+/[^/]+/0/././."
+      ],
+      "deny_rule": [
+        "[^/]+/[^/]+/1/././."
+      ]
     }
   },
   "targets": [
@@ -50,8 +59,14 @@ github-backup --config config.json
         "type": "file",
         "config": {
           "dir": "SAVE_DIR",
-          "history": "FILE_HISTORY_JSON_PATH"
+          "history": "FILE_HISTORY_JSON_PATH",
+          "debug": false
         }
+      },
+      "filter": {
+        "unmatched_repo_action": "ignore",
+        "allow_rule": null,
+        "deny_rule": null
       }
     }
   ]

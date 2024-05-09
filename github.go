@@ -6,6 +6,14 @@ import (
 	"net/http"
 )
 
+type Repo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Private     bool   `json:"private"`
+	Fork        bool   `json:"fork"`
+	Archived    bool   `json:"archived"`
+}
+
 type Github struct {
 	Token string
 }
@@ -36,7 +44,7 @@ func (g *Github) loadRepos(owner string, perPage, page int) ([]Repo, error) {
 	return repos, nil
 }
 
-func (g *Github) LoadRepos(owner string) ([]Repo, error) {
+func (g *Github) LoadAllRepos(owner string) ([]Repo, error) {
 	perPage := 100
 	page := 1
 	res := make([]Repo, 0)

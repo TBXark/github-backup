@@ -10,11 +10,6 @@ var (
 	BuildVersion = "dev"
 )
 
-type Repo struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
 type BackupProvider interface {
 	LoadRepos(owner string) ([]string, error)
 	MigrateRepo(owner, repoOwner string, repoName, repoDesc string, githubToken string) (string, error)
@@ -23,13 +18,13 @@ type BackupProvider interface {
 
 func BackupProviderBuilder(conf *BackupProviderConfig) BackupProvider {
 	switch conf.Type {
-	case "gitea":
+	case BackupProviderConfigTypeGitea:
 		c, err := ConvertToBackupProviderConfig[GiteaConf](conf.Config)
 		if err != nil {
 			log.Fatalf("convert gitea config error: %s", err.Error())
 		}
 		return NewGitea(c)
-	case "file":
+	case BackupProviderConfigTypeFile:
 		c, err := ConvertToBackupProviderConfig[FileBackupConfig](conf.Config)
 		if err != nil {
 			log.Fatalf("convert file config error: %s", err.Error())
@@ -37,19 +32,28 @@ func BackupProviderBuilder(conf *BackupProviderConfig) BackupProvider {
 		return NewFileBackup(c)
 	}
 	return nil
-
 }
 
 func runBackupTask(conf *SyncConfig) {
 	for _, target := range conf.Targets {
 		target.MergeDefault(conf.DefaultConf)
+
 		github := NewGithub(target.Token)
-		repos, tErr := github.LoadRepos(target.Owner)
+		repos, tErr := github.LoadAllRepos(target.Owner)
 		if tErr != nil {
 			log.Panicf("load %s repos error: %s", target.RepoOwner, tErr.Error())
 		}
+
 		provider := BackupProviderBuilder(target.Backup)
+		handledRepos := make(map[string]struct{})
+
 		for _, repo := range repos {
+			desc := RepoDescription(target.Owner, repo.Name, repo.Private, repo.Fork, repo.Archived)
+			if !IsMatchRepoDescription(desc, target.Filter.AllowRule...) {
+				if IsMatchRepoDescription(desc, target.Filter.DenyRule...) {
+					continue
+				}
+			}
 			s, e := provider.MigrateRepo(
 				target.Owner, target.RepoOwner,
 				repo.Name, repo.Description,
@@ -60,7 +64,26 @@ func runBackupTask(conf *SyncConfig) {
 			} else {
 				log.Printf("migrate %s %s", repo.Name, s)
 			}
+			handledRepos[repo.Name] = struct{}{}
 		}
+
+		if target.Filter.UnmatchedRepoAction == UnmatchedRepoActionDelete {
+			localRepos, lErr := provider.LoadRepos(target.RepoOwner)
+			if lErr != nil {
+				log.Panicf("load %s repos error: %s", target.RepoOwner, lErr.Error())
+			}
+			for _, repo := range localRepos {
+				if _, ok := handledRepos[repo]; !ok {
+					s, e := provider.DeleteRepo(target.RepoOwner, repo)
+					if e != nil {
+						log.Printf("delete %s error: %s", repo, e.Error())
+					} else {
+						log.Printf("delete %s %s", repo, s)
+					}
+				}
+			}
+		}
+
 	}
 }
 

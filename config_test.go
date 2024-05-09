@@ -19,6 +19,17 @@ func TestSyncConfig(t *testing.T) {
 					AuthUsername: "GITEA_USERNAME",
 				},
 			},
+			Filter: &FilterConfig{
+				UnmatchedRepoAction: UnmatchedRepoActionDelete,
+				AllowRule: []string{
+					// :owner/:repo/:private/:fork/:archived
+					"[^/]+/[^/]+/0/././.",
+				},
+				DenyRule: []string{
+					// :owner/:repo/:private/:fork/:archived
+					"[^/]+/[^/]+/1/././.",
+				},
+			},
 		},
 		Targets: []GithubConfig{
 			{
@@ -31,6 +42,9 @@ func TestSyncConfig(t *testing.T) {
 						Dir:     "SAVE_DIR",
 						History: "FILE_HISTORY_JSON_PATH",
 					},
+				},
+				Filter: &FilterConfig{
+					UnmatchedRepoAction: UnmatchedRepoActionIgnore,
 				},
 			},
 		},
