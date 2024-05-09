@@ -26,44 +26,68 @@ func NewGithub(token string) *Github {
 	return &Github{Token: token}
 }
 
-func (g *Github) loadReposPage(owner string, perPage, page int, isOrg bool) ([]Repo, error) {
-	url := fmt.Sprintf("https://api.github.com/users/%s/repos", owner)
-	if isOrg {
-		url = fmt.Sprintf("https://api.github.com/orgs/%s/repos", owner)
-	}
-	url = fmt.Sprintf("%s?per_page=%d&page=%d", url, perPage, page)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	if g.Token != "" {
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", g.Token))
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	var repos []Repo
-	err = json.NewDecoder(resp.Body).Decode(&repos)
-	if err != nil {
-		return nil, err
-	}
+func filterRepos(owner string, res []Repo) map[string]Repo {
+	matchedRepos := make(map[string]Repo)
 	ownerLower := strings.ToLower(owner)
-	var matchedRepos []Repo
-	for _, repo := range repos {
+	for _, repo := range res {
 		if strings.ToLower(repo.Owner.Login) != ownerLower {
 			continue
 		}
-		matchedRepos = append(matchedRepos, repo)
+		matchedRepos[repo.Name] = repo
 	}
-	return matchedRepos, nil
+	return matchedRepos
+}
+
+func (g *Github) loadReposPageBySearch(owner string, perPage, page int, isOrg bool) (map[string]Repo, error) {
+	url := "search/repositories"
+	if isOrg {
+		url = fmt.Sprintf("%s?q=org%s&page=%d&per_page=%d", url, "%3A"+owner, page, perPage)
+	} else {
+		url = fmt.Sprintf("%s?q=user%s&page=%d&per_page=%d", url, "%3A"+owner, page, perPage)
+	}
+	var res struct {
+		Items []Repo `json:"items"`
+	}
+	err := GithubRequestJson("GET", url, g.Token, &res)
+	if err != nil {
+		return nil, err
+	}
+	return filterRepos(owner, res.Items), nil
+
+}
+
+func (g *Github) loadReposPage(owner string, perPage, page int, isOrg bool) (map[string]Repo, error) {
+	url := fmt.Sprintf("users/%s/repos", owner)
+	if isOrg {
+		url = fmt.Sprintf("orgs/%s/repos", owner)
+	}
+	url = fmt.Sprintf("%s?per_page=%d&page=%d&type=all", url, perPage, page)
+	var res []Repo
+	err := GithubRequestJson("GET", url, g.Token, &res)
+	if err != nil {
+		return nil, err
+	}
+	return filterRepos(owner, res), nil
 }
 
 func (g *Github) LoadAllRepos(owner string, isOrg bool) ([]Repo, error) {
-	perPage := 100
 	page := 1
-	res := make([]Repo, 0)
+	perPage := 100
+	res := make(map[string]Repo)
+	for {
+		repos, err := g.loadReposPageBySearch(owner, perPage, page, isOrg)
+		if err != nil {
+			break
+		}
+		if len(repos) == 0 {
+			break
+		}
+		for k, v := range repos {
+			res[k] = v
+		}
+		page++
+	}
+	page = 1
 	for {
 		repos, err := g.loadReposPage(owner, perPage, page, isOrg)
 		if err != nil {
@@ -72,10 +96,16 @@ func (g *Github) LoadAllRepos(owner string, isOrg bool) ([]Repo, error) {
 		if len(repos) == 0 {
 			break
 		}
-		res = append(res, repos...)
+		for k, v := range repos {
+			res[k] = v
+		}
 		page++
 	}
-	return res, nil
+	var resSlice []Repo
+	for _, v := range res {
+		resSlice = append(resSlice, v)
+	}
+	return resSlice, nil
 }
 
 func GithubRequest(method, path, token string, handler func(*http.Response) error) error {
@@ -87,6 +117,8 @@ func GithubRequest(method, path, token string, handler func(*http.Response) erro
 	if token != "" {
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	}
+	req.Header.Add("Accept", "application/vnd.github.v3+json")
+	req.Header.Add("X-GitHub-Api-Version", "2022-11-28")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
