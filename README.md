@@ -4,9 +4,13 @@ A simple tool to backup github repository to gitea or other provider.
 
 ### Installation
 
+#### Build from source
 ```bash
 go install github.com/TBXark/github-backup@latest
 ````
+
+#### Download from release
+Download the latest release from [release page](https://github.com/TBXark/github-backup/releases)
 
 ### Usage
 ```
