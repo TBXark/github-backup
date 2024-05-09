@@ -1,6 +1,6 @@
-# github backup
+# GitHub Backup
 
-A simple tool to backup github repository to gitea or other provider.
+A simple tool to back up GitHub repository to gitea or other provider.
 
 ### Installation
 

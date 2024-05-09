@@ -4,10 +4,12 @@ set -e
 set -o pipefail
 
 VERSION=0.0.1
+AUTHOR=TBXark
 BIN_NAME=github-backup
+REPO_NAME=github-backup
 CURRENT_OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 CURRENT_ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
-BUILD_FROM_SOURCE="You can build from source: go install github.com/TBXark/${BIN_NAME}@latest"
+BUILD_FROM_SOURCE="You can build from source: go install github.com/${AUTHOR}/${REPO_NAME}@latest"
 
 # if CURRENT_ARCH is x86_64 or amd64, then use x86
 if [ "$CURRENT_ARCH" == "x86_64" ] || [ "$CURRENT_ARCH" == "amd64" ]; then
@@ -29,13 +31,12 @@ if [ "$CURRENT_OS" != "linux" ] && [ "$CURRENT_OS" != "darwin" ] && [ "$CURRENT_
 fi
 
 TARGET=${BIN_NAME}_${CURRENT_OS}_${CURRENT_ARCH}
-
-URL=https://github.com/TBXark/${BIN_NAME}/releases/download/${VERSION}/${TARGET}.tar.gz
+URL=https://github.com/${AUTHOR}/${REPO_NAME}/releases/download/${VERSION}/${TARGET}.tar.gz
 echo "Downloading ${BIN_NAME} from ${URL}"
 
 TEMP_DIR=$(mktemp -d) || exit 1
 readonly TEMP_DIR
-trap 'rm -rf ${TEMP_DIR}' EXIT
+trap '/bin/rm -rf ${TEMP_DIR}' EXIT
 
 curl -L $URL | tar -xz -C ${TEMP_DIR}
 mv ${TEMP_DIR}/${TARGET}/${BIN_NAME} /usr/local/bin/${BIN_NAME}
