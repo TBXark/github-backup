@@ -101,7 +101,7 @@ func (g *Gitea) MigrateRepo(owner, repoOwner string, repoName, repoDesc string, 
 	if err != nil {
 		return "", err
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("token %s", g.conf.Host))
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", g.conf.Token))
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 
 	resp, err := http.DefaultClient.Do(req)
