@@ -1,0 +1,12 @@
+[Unit]
+Description=Github Backup Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+LimitNOFILE=32768
+ExecStart=/usr/local/bin/github-backup --config=/etc/github-backup/config.json
+
+[Install]
+WantedBy=multi-user.target
