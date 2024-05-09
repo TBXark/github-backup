@@ -1,6 +1,8 @@
 # github backup
 
-A simple tool to backup github repository to gitea or other provider.
+A simple tool to back up GitHub repository to gitea or other provider.
+
+Legacy javascript version can be found [here](./legacy/README.md)
 
 ### Installation
 
