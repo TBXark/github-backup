@@ -12,6 +12,11 @@ go install github.com/TBXark/github-backup@latest
 #### Download from release
 Download the latest release from [release page](https://github.com/TBXark/github-backup/releases)
 
+#### Install by script
+```bash
+curl -sL https://raw.githubusercontent.com/TBXark/github-backup/master/init/install.sh | bash
+```
+
 ### Usage
 ```
 Usage of github-backup:
