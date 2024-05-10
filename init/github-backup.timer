@@ -1,8 +1,10 @@
 [Unit]
-Description=Runs github backup every hour
+Description=Run github backup every hour
 
 [Timer]
-OnUnitActiveSec=1h
+OnCalendar=*-*-* *:00
+RandomizedDelaySec=30m
+Persistent=true
 Unit=github-backup.service
 
 [Install]
