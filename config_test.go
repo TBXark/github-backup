@@ -23,12 +23,16 @@ func TestSyncConfig(t *testing.T) {
 				UnmatchedRepoAction: UnmatchedRepoActionDelete,
 				AllowRule: []string{
 					// :owner/:repo/:private/:fork/:archived
-					"[^/]+/[^/]+/0/./.",
+					"[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/1/[01]/[01]",
 				},
 				DenyRule: []string{
 					// :owner/:repo/:private/:fork/:archived
-					"[^/]+/[^/]+/1/./.",
+					"[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/0/[01]/[01]",
 				},
+			},
+			SpecificGithubToken: map[string]string{
+				"[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/1/[01]/[01]": "PRIVATE_GITHUB_TOKEN",
+				"[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/0/[01]/[01]": "PUBLIC_GITHUB_TOKEN",
 			},
 		},
 		Targets: []GithubConfig{

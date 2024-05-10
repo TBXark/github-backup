@@ -18,6 +18,10 @@
       "deny_rule": [
         "[^/]+/[^/]+/1/./."
       ]
+    },
+    "specific_github_token": {
+      "[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/0/[01]/[01]": "PUBLIC_GITHUB_TOKEN",
+      "[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/1/[01]/[01]": "PRIVATE_GITHUB_TOKEN"
     }
   },
   "targets": [

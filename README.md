@@ -66,10 +66,15 @@ github-backup --config config.json
         "unmatched_repo_action": "ignore",
         // Allow rules, only repositories that match the rules will be backed up
         // The rule is a regular expression, the format is :owner/:repo/:private/:fork/:archived
-        // For example, the rule [^/]+/[^/]+/0/./. means that only public repositories will be backed up
-        "allow_rule": ["[^/]+/[^/]+/0/./."],
+        // For example, the rule [a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/0/[01]/[01] means that only public repositories will be backed up
+        "allow_rule": ["[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/0/[01]/[01]"],
         // Deny rules, repositories that match the rules will not be backed up
-        "deny_rule": ["[^/]+/[^/]+/1/./."]
+        "deny_rule": ["[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/1/[01]/[01]"]
+      },
+        // The specific token configuration, the key is the rule, and the value is the token
+      "specific_github_token": {
+        "[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/0/[01]/[01]": "PUBLIC_GITHUB_TOKEN", 
+        "[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/1/[01]/[01]": "PRIVATE_GITHUB_TOKEN"
       }
     },
     {

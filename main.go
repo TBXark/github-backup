@@ -66,9 +66,11 @@ func runBackupTask(conf *SyncConfig) {
 			identity := RepoIdentity(target.Owner, repo.Name, repo.Private, repo.Fork, repo.Archived)
 
 			// check allow/deny rule
-			if !IsMatchRepoIdentity(identity, target.Filter.AllowRule...) {
-				if IsMatchRepoIdentity(identity, target.Filter.DenyRule...) {
-					continue
+			if target.Filter != nil {
+				if !IsMatchRepoIdentity(identity, target.Filter.AllowRule...) {
+					if IsMatchRepoIdentity(identity, target.Filter.DenyRule...) {
+						continue
+					}
 				}
 			}
 
