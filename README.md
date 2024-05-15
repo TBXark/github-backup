@@ -36,7 +36,8 @@ github-backup --config config.json
 
 ### Configuration
 
-```javascript
+> The configuration file is a json file, the default configuration is as follows, You need to replace the placeholder with your own configuration, And delete the comments
+```json5
 {
   // Target configuration, will be used to backup the repository
   "targets": [
