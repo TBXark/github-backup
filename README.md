@@ -30,7 +30,7 @@ Usage of github-backup:
 ```
 
 ```bash
-github-backup --config config.json
+github-backup -config config.json
 ```
 
 
