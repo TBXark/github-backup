@@ -39,6 +39,9 @@ func (g *Gitea) loadReposPage(owner string, perPage, page int, isOrg bool) ([]st
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("load repos error: %s", resp.Status)
+	}
 	var repos []struct {
 		Name  string `json:"name"`
 		Owner struct {
@@ -117,6 +120,7 @@ func (g *Gitea) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwnerOrg 
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 	return resp.Status, nil
 }
 
@@ -132,6 +136,7 @@ func (g *Gitea) DeleteRepo(owner, repo string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 	return resp.Status, nil
 }
 

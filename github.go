@@ -123,10 +123,10 @@ func GithubRequest(method, path, token string, handler func(*http.Response) erro
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("request %s error: %s", path, resp.Status)
 	}
-	defer resp.Body.Close()
 	return handler(resp)
 }
 
