@@ -2,6 +2,8 @@
 
 A simple tool to back up GitHub repository to gitea or other provider.
 
+> Legacy javascript version you can find in [legacy](./legacy/)
+
 ### Installation
 
 #### Build from source
