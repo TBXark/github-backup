@@ -143,7 +143,6 @@ func main() {
 		log.Fatalf("load config error: %s", err.Error())
 	}
 
-	runBackupTask(conf)
 	if conf.Cron != "" {
 		task := cron.New()
 		_, e := task.AddFunc(conf.Cron, func() {
@@ -153,5 +152,7 @@ func main() {
 			log.Fatalf("add cron task error: %s", e.Error())
 		}
 		task.Run()
+	} else {
+		runBackupTask(conf)
 	}
 }
