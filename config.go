@@ -2,7 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"strings"
 )
 
 type BackupProviderConfigType string
@@ -107,12 +111,25 @@ func ConvertToBackupProviderConfig[T any](raw any) (*T, error) {
 }
 
 func LoadConfig(path string) (*SyncConfig, error) {
-	file, err := os.ReadFile(path)
+	var body []byte
+	var err error
+
+	if strings.HasPrefix(path, "http") {
+		resp, httpErr := http.Get(path)
+		if httpErr != nil {
+			return nil, fmt.Errorf("failed to fetch config: %w", httpErr)
+		}
+		defer resp.Body.Close()
+		body, err = io.ReadAll(resp.Body)
+	} else {
+		body, err = os.ReadFile(path)
+	}
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read config: %w", err)
 	}
 	var conf SyncConfig
-	err = json.Unmarshal(file, &conf)
+	err = json.Unmarshal(body, &conf)
 	if err != nil {
 		return nil, err
 	}
