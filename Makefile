@@ -8,7 +8,7 @@ GO_BUILD=CGO_ENABLED=0 go build $(LD_FLAGS)
 
 .PHONY: build
 build:
-	$(GO_BUILD) -o ./build/$(BIN_NAME)_$(CURRENT_OS)_$(CURRENT_ARCH)/ ./...
+	$(GO_BUILD) -o $(BUILD_DIR)/ ./...
 
 .PHONY: run
 run:
@@ -52,3 +52,7 @@ compressAll: buildAll
 		base=$${dir%/}; \
 		tar -czvf $${base}.tar.gz $${base}; \
 	done
+
+.PHONY: buildImage
+buildImage:
+	docker buildx build --platform=linux/amd64,linux/arm64 -t ghcr.io/tbxark/github-backup:latest . --push --provenance=false

@@ -1,0 +1,8 @@
+services:
+  app:
+    image: ghcr.io/tbxark/github-backup:latest
+    pull_policy: always
+    volumes:
+      - ./config.json:/config.json
+    restart: always
+    command: ["--config", "/config.json"]
