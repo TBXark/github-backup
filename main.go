@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/robfig/cron/v3"
 	"log"
 )
 
@@ -141,5 +142,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("load config error: %s", err.Error())
 	}
-	runBackupTask(conf)
+
+	if conf.Cron == "" {
+		runBackupTask(conf)
+	} else {
+		task := cron.New()
+		_, e := task.AddFunc(conf.Cron, func() {
+			runBackupTask(conf)
+		})
+		if e != nil {
+			log.Fatalf("add cron task error: %s", e.Error())
+		}
+		task.Run()
+	}
 }
