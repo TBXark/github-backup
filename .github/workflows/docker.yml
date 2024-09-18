@@ -17,7 +17,7 @@ jobs:
         with:
           docker_registry: ghcr.io
           docker_username: ${{ github.actor }}
-          docker_password:  ${{ secrets.GITHUB_TOKEN }}
+          docker_password: ${{ secrets.GITHUB_TOKEN }}
           backup_registry: ${{ secrets.BACKUP_REGISTRY }}
           backup_username: ${{ secrets.BACKUP_USERNAME }}
           backup_password: ${{ secrets.BACKUP_PASSWORD }}
