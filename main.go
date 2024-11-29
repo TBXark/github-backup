@@ -40,11 +40,23 @@ func BuildBackupProvider(conf *BackupProviderConfig) (BackupProvider, error) {
 	return nil, fmt.Errorf("unknown backup provider type: %s", conf.Type)
 }
 
-func runBackupTask(conf *SyncConfig) {
-	for _, target := range conf.Targets {
+type SyncTask struct {
+	conf    *SyncConfig
+	counter map[string]int
+}
+
+func NewTask(conf *SyncConfig) *SyncTask {
+	return &SyncTask{
+		conf:    conf,
+		counter: make(map[string]int, 100),
+	}
+}
+
+func (t *SyncTask) Run() {
+	for _, target := range t.conf.Targets {
 
 		// merge default config
-		target.MergeDefault(conf.DefaultConf)
+		target.MergeDefault(t.conf.DefaultConf)
 
 		// load all github repos
 		github := NewGithub(target.Token)
@@ -85,6 +97,7 @@ func runBackupTask(conf *SyncConfig) {
 			}
 
 			// migrate repo
+			delete(t.counter, repo.Name)
 			s, e := provider.MigrateRepo(
 				target.Owner, target.RepoOwner,
 				target.IsOwnerOrg, target.IsRepoOwnerOrg,
@@ -112,6 +125,12 @@ func runBackupTask(conf *SyncConfig) {
 			// delete unmatched repos
 			for _, repo := range localRepos {
 				if _, ok := handledRepos[repo]; !ok {
+					if target.Filter.PreDeleteCheckCount > 0 {
+						if t.counter[repo] < target.Filter.PreDeleteCheckCount {
+							t.counter[repo]++
+							continue
+						}
+					}
 					s, e := provider.DeleteRepo(target.RepoOwner, repo)
 					if e != nil {
 						log.Printf("delete %s error: %s", repo, e.Error())
@@ -143,16 +162,15 @@ func main() {
 		log.Fatalf("load config error: %s", err.Error())
 	}
 
+	syncTask := NewTask(conf)
 	if conf.Cron != "" {
 		task := cron.New()
-		_, e := task.AddFunc(conf.Cron, func() {
-			runBackupTask(conf)
-		})
+		_, e := task.AddFunc(conf.Cron, syncTask.Run)
 		if e != nil {
 			log.Fatalf("add cron task error: %s", e.Error())
 		}
 		task.Run()
 	} else {
-		runBackupTask(conf)
+		syncTask.Run()
 	}
 }

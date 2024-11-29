@@ -49,6 +49,7 @@ type GithubConfig struct {
 
 type FilterConfig struct {
 	UnmatchedRepoAction UnmatchedRepoAction `json:"unmatched_repo_action"`
+	PreDeleteCheckCount int                 `json:"pre_delete_check_count"`
 	AllowRule           []string            `json:"allow_rule"`
 	DenyRule            []string            `json:"deny_rule"`
 }
@@ -77,6 +78,7 @@ func (c *GithubConfig) MergeDefault(defaultConf *DefaultConfig) {
 	}
 	if c.Filter.UnmatchedRepoAction == "" {
 		c.Filter.UnmatchedRepoAction = defaultConf.Filter.UnmatchedRepoAction
+		c.Filter.PreDeleteCheckCount = defaultConf.Filter.PreDeleteCheckCount
 		if c.Filter.UnmatchedRepoAction == "" {
 			c.Filter.UnmatchedRepoAction = UnmatchedRepoActionIgnore
 		}
