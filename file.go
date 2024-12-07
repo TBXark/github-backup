@@ -61,7 +61,7 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwne
 		DefaultBranch string `json:"default_branch"`
 		UpdateAt      string `json:"updated_at"`
 	}
-	err := GithubRequestJson("GET", url, githubToken, &info)
+	err := GithubRequestJson("GET", url, githubToken, nil, &info)
 	if err != nil {
 		return "", err
 	}
@@ -93,7 +93,7 @@ func (f *FileBackup) MigrateRepo(owner, repoOwner string, isOwnerOrg, isRepoOwne
 			return "", wErr
 		}
 	} else {
-		dErr := GithubRequest("GET", url, githubToken, func(resp *http.Response) error {
+		dErr := GithubRequest("GET", url, githubToken, nil, func(resp *http.Response) error {
 			tarFile, wErr := os.Create(filePath)
 			if wErr != nil {
 				return wErr
