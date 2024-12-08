@@ -11,14 +11,6 @@ A simple tool to back up GitHub repository to gitea or other provider.
 go install github.com/TBXark/github-backup@latest
 ````
 
-#### Download from release
-Download the latest release from [release page](https://github.com/TBXark/github-backup/releases)
-
-#### Install by script
-```bash
-curl -sL https://raw.githubusercontent.com/TBXark/github-backup/master/scripts/install.sh | bash
-```
-
 ### Usage
 ```
 Usage of github-backup:
