@@ -1,4 +1,4 @@
-package main
+package matcher
 
 import "testing"
 
@@ -30,12 +30,12 @@ func TestIsMatchRepoDescription(t *testing.T) {
 		"tbxark-arc/backup-arc/1/1/1": true,
 	}
 	for c, v := range publicCases {
-		if !IsMatchRepoIdentity(c, publicRegex) {
+		if !IsMatch(c, publicRegex) {
 			t.Errorf("public case %s expect %v but %v", c, v, false)
 		}
 	}
 	for c, v := range privateCases {
-		if !IsMatchRepoIdentity(c, privateRegex) {
+		if !IsMatch(c, privateRegex) {
 			t.Errorf("private case %s expect %v but %v", c, v, false)
 		}
 	}

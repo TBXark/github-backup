@@ -1,8 +1,10 @@
-package main
+package config
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/TBXark/github-backup/provider/file"
+	"github.com/TBXark/github-backup/provider/gitea"
 	"testing"
 )
 
@@ -13,7 +15,7 @@ func TestSyncConfig(t *testing.T) {
 			RepoOwner:   "BACKUP_TARGET_REPO_OWNER",
 			Backup: &BackupProviderConfig{
 				Type: "gitea",
-				Config: &GiteaConf{
+				Config: &gitea.Config{
 					Host:         "GITEA_HOST",
 					Token:        "GITEA_TOKEN",
 					AuthUsername: "GITEA_USERNAME",
@@ -42,7 +44,7 @@ func TestSyncConfig(t *testing.T) {
 				RepoOwner: "BACKUP_TARGET_REPO_OWNER",
 				Backup: &BackupProviderConfig{
 					Type: "file",
-					Config: &FileBackupConfig{
+					Config: &file.FileBackupConfig{
 						Dir:     "SAVE_DIR",
 						History: "FILE_HISTORY_JSON_PATH",
 					},

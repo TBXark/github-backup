@@ -1,11 +1,9 @@
-package main
+package github
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
+	"github.com/TBXark/github-backup/utils/request"
+	"strings"
 )
 
 type Repo struct {
@@ -64,24 +62,11 @@ query {
 		dataKey = "repositoryOwner"
 		queryType = fmt.Sprintf("repositoryOwner(login: \"%s\")", owner)
 	}
+	token := request.WithAuthorization(g.Token, "bearer")
+	ownerLower := strings.ToLower(owner)
 	for {
-		var data struct {
-			Data map[string]struct {
-				Repositories struct {
-					PageInfo struct {
-						HasNextPage bool   `json:"hasNextPage"`
-						EndCursor   string `json:"endCursor"`
-					} `json:"pageInfo"`
-					Nodes []Repo `json:"nodes"`
-				} `json:"repositories"`
-			} `json:"data"`
-		}
-		query := fmt.Sprintf(tmpl, queryType, next)
-		rawBody, err := json.Marshal(map[string]any{"query": query})
-		if err != nil {
-			return nil, err
-		}
-		err = GithubRequestJson("POST", "graphql", g.Token, bytes.NewReader(rawBody), &data)
+		query := map[string]string{"query": fmt.Sprintf(tmpl, queryType, next)}
+		data, err := request.POST[reposQuery]("https://api.github.com/graphql", query, token)
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +75,7 @@ query {
 			return nil, fmt.Errorf("no data key %s", dataKey)
 		}
 		for _, repo := range info.Repositories.Nodes {
-			if repo.Owner.Login == owner {
+			if strings.ToLower(repo.Owner.Login) == ownerLower {
 				repos = append(repos, repo)
 			}
 		}
@@ -102,28 +87,14 @@ query {
 	return repos, nil
 }
 
-func GithubRequest(method, path, token string, body io.Reader, handler func(*http.Response) error) error {
-	url := fmt.Sprintf("https://api.github.com/%s", path)
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return err
-	}
-	if token != "" {
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request %s error: %s", path, resp.Status)
-	}
-	return handler(resp)
-}
-
-func GithubRequestJson[T any](method, path, token string, body io.Reader, res *T) error {
-	return GithubRequest(method, path, token, body, func(resp *http.Response) error {
-		return json.NewDecoder(resp.Body).Decode(res)
-	})
+type reposQuery struct {
+	Data map[string]struct {
+		Repositories struct {
+			PageInfo struct {
+				HasNextPage bool   `json:"hasNextPage"`
+				EndCursor   string `json:"endCursor"`
+			} `json:"pageInfo"`
+			Nodes []Repo `json:"nodes"`
+		} `json:"repositories"`
+	} `json:"data"`
 }

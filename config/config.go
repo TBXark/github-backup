@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -95,9 +95,9 @@ func (c *GithubConfig) MergeDefault(defaultConf *DefaultConfig) {
 }
 
 type SyncConfig struct {
-	DefaultConf *DefaultConfig `json:"default_conf"`
-	Targets     []GithubConfig `json:"targets"`
-	Cron        string         `json:"cron"`
+	DefaultConf *DefaultConfig  `json:"default_conf"`
+	Targets     []*GithubConfig `json:"targets"`
+	Cron        string          `json:"cron"`
 }
 
 func ConvertToBackupProviderConfig[T any](raw any) (*T, error) {
