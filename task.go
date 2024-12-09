@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func BuildBackupProvider(conf *config.BackupProviderConfig) (provider.BackupProvider, error) {
+func BuildBackupProvider(conf *config.BackupProviderConfig) (provider.Provider, error) {
 	switch conf.Type {
 	case config.BackupProviderConfigTypeGitea:
 		c, err := config.ConvertToBackupProviderConfig[gitea.Config](conf.Config)

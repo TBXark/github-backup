@@ -14,7 +14,7 @@ type Config struct {
 	AuthUsername string `json:"auth_username"`
 }
 
-var _ provider.BackupProvider = &Gitea{}
+var _ provider.Provider = &Gitea{}
 
 type Gitea struct {
 	conf *Config

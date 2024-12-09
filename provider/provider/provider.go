@@ -11,7 +11,7 @@ type Repo struct {
 	AuthToken   string
 }
 
-type BackupProvider interface {
+type Provider interface {
 	LoadRepos(owner *Owner) ([]string, error)
 	MigrateRepo(from *Owner, to *Owner, repo *Repo) (string, error)
 	DeleteRepo(owner, repo string) (string, error)

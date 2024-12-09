@@ -28,7 +28,7 @@ func NewGithub(token string) *Github {
 func (g *Github) LoadAllRepos(owner string, isOrg bool) ([]Repo, error) {
 	tmpl := `
 query {
-  %s {
+  repositories: %s {
     repositories(
       first: 100,
       after: %s
@@ -53,13 +53,10 @@ query {
 `
 	next := "null"
 	queryType := ""
-	dataKey := ""
 	var repos []Repo
 	if isOrg {
-		dataKey = "organization"
 		queryType = fmt.Sprintf("organization(login: \"%s\")", owner)
 	} else {
-		dataKey = "repositoryOwner"
 		queryType = fmt.Sprintf("repositoryOwner(login: \"%s\")", owner)
 	}
 	token := request.WithAuthorization(g.Token, "bearer")
@@ -70,31 +67,29 @@ query {
 		if err != nil {
 			return nil, err
 		}
-		info, ok := data.Data[dataKey]
-		if !ok {
-			return nil, fmt.Errorf("no data key %s", dataKey)
-		}
-		for _, repo := range info.Repositories.Nodes {
+		for _, repo := range data.Data.Repositories.Repositories.Nodes {
 			if strings.ToLower(repo.Owner.Login) == ownerLower {
 				repos = append(repos, repo)
 			}
 		}
-		if !info.Repositories.PageInfo.HasNextPage {
+		if !data.Data.Repositories.Repositories.PageInfo.HasNextPage {
 			break
 		}
-		next = fmt.Sprintf(`"%s"`, info.Repositories.PageInfo.EndCursor)
+		next = fmt.Sprintf(`"%s"`, data.Data.Repositories.Repositories.PageInfo.EndCursor)
 	}
 	return repos, nil
 }
 
 type reposQuery struct {
-	Data map[string]struct {
+	Data struct {
 		Repositories struct {
-			PageInfo struct {
-				HasNextPage bool   `json:"hasNextPage"`
-				EndCursor   string `json:"endCursor"`
-			} `json:"pageInfo"`
-			Nodes []Repo `json:"nodes"`
+			Repositories struct {
+				PageInfo struct {
+					HasNextPage bool   `json:"hasNextPage"`
+					EndCursor   string `json:"endCursor"`
+				} `json:"pageInfo"`
+				Nodes []Repo `json:"nodes"`
+			} `json:"repositories"`
 		} `json:"repositories"`
 	} `json:"data"`
 }
