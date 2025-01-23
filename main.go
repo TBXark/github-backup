@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/TBXark/confstore"
 	"github.com/TBXark/github-backup/config"
 	"github.com/robfig/cron/v3"
 	"log"
@@ -25,7 +26,7 @@ func main() {
 		flag.Usage()
 		return
 	}
-	conf, err := config.LoadConfig(*c)
+	conf, err := confstore.Load[config.SyncConfig](*c)
 	if err != nil {
 		log.Fatalf("load config error: %s", err.Error())
 	}

@@ -1,2 +1,4 @@
+github.com/TBXark/confstore v0.0.0-20250123065822-f224518502e3 h1:ZjqHMo5/qClZzMRj5F39tJ2lFcar1sXNv0T9HzsiAME=
+github.com/TBXark/confstore v0.0.0-20250123065822-f224518502e3/go.mod h1:TOxM19Snt9wT02PJzyz66sgq7sWhr4AFzPEZIKvVnTE=
 github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
