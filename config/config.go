@@ -8,7 +8,7 @@ type BackupProviderConfigType string
 
 const (
 	BackupProviderConfigTypeGitea BackupProviderConfigType = "gitea"
-	BackupProviderConfigTypeFile  BackupProviderConfigType = "file"
+	BackupProviderConfigTypeLocal BackupProviderConfigType = "local"
 )
 
 type UnmatchedRepoAction string

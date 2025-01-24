@@ -5,6 +5,7 @@ import (
 	"github.com/TBXark/github-backup/config"
 	"github.com/TBXark/github-backup/provider/gitea"
 	"github.com/TBXark/github-backup/provider/github"
+	"github.com/TBXark/github-backup/provider/local"
 	"github.com/TBXark/github-backup/provider/provider"
 	"github.com/TBXark/github-backup/utils/matcher"
 	"log"
@@ -18,6 +19,12 @@ func BuildBackupProvider(conf *config.BackupProviderConfig) (provider.Provider, 
 			return nil, err
 		}
 		return gitea.NewGitea(c), nil
+	case config.BackupProviderConfigTypeLocal:
+		c, err := config.Convert[local.Config](conf.Config)
+		if err != nil {
+			return nil, err
+		}
+		return local.NewLocal(c), nil
 	}
 	return nil, fmt.Errorf("unknown backup provider type: %s", conf.Type)
 }
