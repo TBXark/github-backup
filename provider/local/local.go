@@ -32,7 +32,11 @@ func (l *Local) LoadRepos(owner *provider.Owner) ([]string, error) {
 	}
 	repos := make([]string, 0)
 	for _, dirEntry := range dirEntries {
-		if dirEntry.IsDir() && isGitRepository(filepath.Join(ownerPath, dirEntry.Name())) {
+		if dirEntry.IsDir() {
+			if !isGitRepository(filepath.Join(ownerPath, dirEntry.Name())) {
+				log.Printf("skipping non-git dir %s/%s", owner.Name, dirEntry.Name())
+				continue
+			}
 			repos = append(repos, dirEntry.Name())
 		}
 	}
