@@ -103,3 +103,11 @@ func Convert[T any](raw json.RawMessage) (*T, error) {
 	}
 	return conf, nil
 }
+
+func ToRaw[T any](conf T) json.RawMessage {
+	raw, err := json.Marshal(conf)
+	if err != nil {
+		return nil
+	}
+	return raw
+}

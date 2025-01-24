@@ -14,11 +14,11 @@ func TestSyncConfig(t *testing.T) {
 			RepoOwner:   "BACKUP_TARGET_REPO_OWNER",
 			Backup: &BackupProviderConfig{
 				Type: "gitea",
-				Config: &gitea.Config{
+				Config: ToRaw(&gitea.Config{
 					Host:         "GITEA_HOST",
 					Token:        "GITEA_TOKEN",
 					AuthUsername: "GITEA_USERNAME",
-				},
+				}),
 			},
 			Filter: &FilterConfig{
 				UnmatchedRepoAction: UnmatchedRepoActionDelete,
