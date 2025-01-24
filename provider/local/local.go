@@ -10,8 +10,9 @@ import (
 )
 
 type Config struct {
-	Root      string `json:"root"`
-	Questions bool   `json:"questions"`
+	Root           string `json:"root"`
+	Questions      bool   `json:"questions"`
+	PullAfterFetch bool   `json:"pull_after_fetch"`
 }
 
 var _ provider.Provider = &Local{}
@@ -71,7 +72,7 @@ func (l *Local) MigrateRepo(from *provider.Owner, to *provider.Owner, repo *prov
 			return "", err
 		}
 	}
-	err = gitPull(repoPath)
+	err = gitFetchAndTryPull(repoPath, l.conf.PullAfterFetch)
 	if err != nil {
 		return "fail", err
 	}
@@ -103,11 +104,20 @@ func gitClone(url, path string) error {
 	return cmd.Run()
 }
 
-func gitPull(path string) error {
+func gitFetchAndTryPull(path string, pullAfterFetch bool) error {
 	log.Printf("pulling %s", path)
-	cmd := exec.Command("git", "pull")
+	cmd := exec.Command("git", "fetch", "--all")
 	cmd.Dir = path
-	return cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	if pullAfterFetch {
+		cmd = exec.Command("git", "pull")
+		cmd.Dir = path
+		return cmd.Run()
+	}
+	return nil
 }
 
 func question(message string) bool {
