@@ -14,7 +14,7 @@ type Repo struct {
 	Archived    bool   `json:"isArchived"`
 	Owner       struct {
 		Login string `json:"login"`
-	}
+	} `json:"owner"`
 }
 
 type Github struct {
