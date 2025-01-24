@@ -20,7 +20,7 @@ const (
 
 type BackupProviderConfig struct {
 	Type   BackupProviderConfigType `json:"type"`
-	Config any                      `json:"config"`
+	Config json.RawMessage          `json:"config"`
 }
 
 type DefaultConfig struct {
@@ -95,15 +95,11 @@ type SyncConfig struct {
 	Cron        string          `json:"cron"`
 }
 
-func ConvertToBackupProviderConfig[T any](raw any) (*T, error) {
-	b, err := json.Marshal(raw)
+func Convert[T any](raw json.RawMessage) (*T, error) {
+	conf := new(T)
+	err := json.Unmarshal(raw, &conf)
 	if err != nil {
 		return nil, err
 	}
-	var conf T
-	err = json.Unmarshal(b, &conf)
-	if err != nil {
-		return nil, err
-	}
-	return &conf, nil
+	return conf, nil
 }

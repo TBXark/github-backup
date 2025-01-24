@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/TBXark/github-backup/provider/file"
 	"github.com/TBXark/github-backup/provider/gitea"
 	"testing"
 )
@@ -37,22 +36,7 @@ func TestSyncConfig(t *testing.T) {
 				"[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/0/[01]/[01]": "PUBLIC_GITHUB_TOKEN",
 			},
 		},
-		Targets: []GithubConfig{
-			{
-				Owner:     "GITHUB_OWNER",
-				Token:     "GITHUB_TOKEN",
-				RepoOwner: "BACKUP_TARGET_REPO_OWNER",
-				Backup: &BackupProviderConfig{
-					Type: "file",
-					Config: &file.FileBackupConfig{
-						Dir:     "SAVE_DIR",
-						History: "FILE_HISTORY_JSON_PATH",
-					},
-				},
-				Filter: &FilterConfig{
-					UnmatchedRepoAction: UnmatchedRepoActionIgnore,
-				},
-			},
+		Targets: []*GithubConfig{
 			{
 				Owner:          "GITHUB_ORG",
 				RepoOwner:      "BACKUP_TARGET_REPO_ORG",

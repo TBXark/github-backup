@@ -13,7 +13,7 @@ import (
 func BuildBackupProvider(conf *config.BackupProviderConfig) (provider.Provider, error) {
 	switch conf.Type {
 	case config.BackupProviderConfigTypeGitea:
-		c, err := config.ConvertToBackupProviderConfig[gitea.Config](conf.Config)
+		c, err := config.Convert[gitea.Config](conf.Config)
 		if err != nil {
 			return nil, err
 		}
