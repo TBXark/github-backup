@@ -112,7 +112,7 @@ func gitClone(url, path string) error {
 }
 
 func gitUpdateLocal(path string, action UpdateAction) error {
-	log.Printf("action %s", path)
+	log.Printf("%s %s", action, path)
 	if action != UpdateActionPull && action != UpdateActionFetch {
 		return fmt.Errorf("unsupported action: %s", action)
 	}
