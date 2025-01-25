@@ -9,10 +9,17 @@ import (
 	"path/filepath"
 )
 
+type UpdateAction string
+
+const (
+	UpdateActionPull  = "pull"
+	UpdateActionFetch = "fetch"
+)
+
 type Config struct {
-	Root           string `json:"root"`
-	Questions      bool   `json:"questions"`
-	PullAfterFetch bool   `json:"pull_after_fetch"`
+	Root      string       `json:"root"`
+	Questions bool         `json:"questions"`
+	Action    UpdateAction `json:"action"`
 }
 
 var _ provider.Provider = &Local{}
@@ -72,7 +79,7 @@ func (l *Local) MigrateRepo(from *provider.Owner, to *provider.Owner, repo *prov
 			return "", err
 		}
 	}
-	err = gitFetchAndTryPull(repoPath, l.conf.PullAfterFetch)
+	err = gitUpdateLocal(repoPath, l.conf.Action)
 	if err != nil {
 		return "fail", err
 	}
@@ -104,18 +111,16 @@ func gitClone(url, path string) error {
 	return cmd.Run()
 }
 
-func gitFetchAndTryPull(path string, pullAfterFetch bool) error {
-	log.Printf("pulling %s", path)
-	cmd := exec.Command("git", "fetch", "--all")
+func gitUpdateLocal(path string, action UpdateAction) error {
+	log.Printf("action %s", path)
+	if action != UpdateActionPull && action != UpdateActionFetch {
+		return fmt.Errorf("unsupported action: %s", action)
+	}
+	cmd := exec.Command("git", string(action), "--all")
 	cmd.Dir = path
 	err := cmd.Run()
 	if err != nil {
 		return err
-	}
-	if pullAfterFetch {
-		cmd = exec.Command("git", "pull")
-		cmd.Dir = path
-		return cmd.Run()
 	}
 	return nil
 }

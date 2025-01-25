@@ -34,7 +34,7 @@ func main() {
 	syncTask := NewTask(conf)
 	if conf.Cron != "" {
 		task := cron.New()
-		_, e := task.AddFunc(conf.Cron, syncTask.Run)
+		_, e := task.AddJob(conf.Cron, syncTask)
 		if e != nil {
 			log.Fatalf("add cron task error: %s", e.Error())
 		}
