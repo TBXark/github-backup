@@ -2,9 +2,10 @@ package gitea
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/TBXark/github-backup/provider/provider"
 	"github.com/TBXark/github-backup/utils/request"
-	"strings"
 )
 
 type Config struct {

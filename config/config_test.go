@@ -3,8 +3,9 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/TBXark/github-backup/provider/gitea"
 	"testing"
+
+	"github.com/TBXark/github-backup/provider/gitea"
 )
 
 func TestSyncConfig(t *testing.T) {

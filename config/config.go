@@ -1,7 +1,15 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+
+	"github.com/go-sphere/confstore"
+	"github.com/go-sphere/confstore/codec"
+	"github.com/go-sphere/confstore/provider"
+	"github.com/go-sphere/confstore/provider/file"
+	"github.com/go-sphere/confstore/provider/http"
 )
 
 type BackupProviderConfigType string
@@ -110,4 +118,26 @@ func ToRaw[T any](conf T) json.RawMessage {
 		return nil
 	}
 	return raw
+}
+
+func newConfProvider(path string) (provider.Provider, error) {
+	if http.IsRemoteURL(path) {
+		return http.New(path, http.WithTimeout(10)), nil
+	}
+	if file.IsLocalPath(path) {
+		return file.New(path, file.WithExpandEnv()), nil
+	}
+	return nil, errors.New("unsupported config path")
+}
+
+func NewConfig(path string) (*SyncConfig, error) {
+	pro, err := newConfProvider(path)
+	if err != nil {
+		return nil, err
+	}
+	config, err := confstore.Load[SyncConfig](context.Background(), pro, codec.JsonCodec())
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }

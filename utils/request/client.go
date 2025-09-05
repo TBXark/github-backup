@@ -55,7 +55,9 @@ func GET[T any](url string, modifier ...Modifier) (*T, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	var result T
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
@@ -82,7 +84,9 @@ func POST[T any](url string, data any, modifier ...Modifier) (*T, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	var result T
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {

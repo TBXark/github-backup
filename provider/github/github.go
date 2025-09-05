@@ -2,8 +2,9 @@ package github
 
 import (
 	"fmt"
-	"github.com/TBXark/github-backup/utils/request"
 	"strings"
+
+	"github.com/TBXark/github-backup/utils/request"
 )
 
 type Repo struct {

@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/TBXark/confstore"
+	"log"
+
 	"github.com/TBXark/github-backup/config"
 	"github.com/robfig/cron/v3"
-	"log"
 )
 
 var (
@@ -14,27 +14,27 @@ var (
 )
 
 func main() {
-	c := flag.String("config", "config.json", "config file")
-	v := flag.Bool("version", false, "show version")
-	h := flag.Bool("help", false, "show help")
+	conf := flag.String("config", "config.json", "config file")
+	version := flag.Bool("version", false, "show version")
+	help := flag.Bool("help", false, "show help")
 	flag.Parse()
-	if *v {
+	if *version {
 		fmt.Println(BuildVersion)
 		return
 	}
-	if *h {
+	if *help {
 		flag.Usage()
 		return
 	}
-	conf, err := confstore.Load[config.SyncConfig](*c)
+	data, err := config.NewConfig(*conf)
 	if err != nil {
 		log.Fatalf("load config error: %s", err.Error())
 	}
 
-	syncTask := NewTask(conf)
-	if conf.Cron != "" {
+	syncTask := NewTask(data)
+	if data.Cron != "" {
 		task := cron.New()
-		_, e := task.AddJob(conf.Cron, syncTask)
+		_, e := task.AddJob(data.Cron, syncTask)
 		if e != nil {
 			log.Fatalf("add cron task error: %s", e.Error())
 		}

@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/TBXark/github-backup/config"
 	"github.com/TBXark/github-backup/provider/gitea"
 	"github.com/TBXark/github-backup/provider/github"
 	"github.com/TBXark/github-backup/provider/local"
 	"github.com/TBXark/github-backup/provider/provider"
 	"github.com/TBXark/github-backup/utils/matcher"
-	"log"
 )
 
 func BuildBackupProvider(conf *config.BackupProviderConfig) (provider.Provider, error) {

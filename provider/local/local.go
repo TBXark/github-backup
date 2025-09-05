@@ -2,11 +2,12 @@ package local
 
 import (
 	"fmt"
-	"github.com/TBXark/github-backup/provider/provider"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/TBXark/github-backup/provider/provider"
 )
 
 type UpdateAction string
