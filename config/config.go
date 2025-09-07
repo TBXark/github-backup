@@ -1,9 +1,7 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 
 	"github.com/go-sphere/confstore"
 	"github.com/go-sphere/confstore/codec"
@@ -120,22 +118,20 @@ func ToRaw[T any](conf T) json.RawMessage {
 	return raw
 }
 
-func newConfProvider(path string) (provider.Provider, error) {
-	if http.IsRemoteURL(path) {
-		return http.New(path, http.WithTimeout(10)), nil
-	}
-	if file.IsLocalPath(path) {
-		return file.New(path, file.WithExpandEnv()), nil
-	}
-	return nil, errors.New("unsupported config path")
-}
-
 func NewConfig(path string) (*SyncConfig, error) {
-	pro, err := newConfProvider(path)
+	prov, err := provider.Selector(
+		path,
+		provider.If(file.IsLocalPath, func(s string) provider.Provider {
+			return file.New(path, file.WithExpandEnv())
+		}),
+		provider.If(http.IsRemoteURL, func(s string) provider.Provider {
+			return http.New(path, http.WithTimeout(10))
+		}),
+	)
 	if err != nil {
 		return nil, err
 	}
-	config, err := confstore.Load[SyncConfig](context.Background(), pro, codec.JsonCodec())
+	config, err := confstore.Load[SyncConfig](prov, codec.JsonCodec())
 	if err != nil {
 		return nil, err
 	}

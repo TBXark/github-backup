@@ -1,4 +1,4 @@
-github.com/go-sphere/confstore v0.0.2 h1:9nuPS86wlv5Rpi+fnnFNq9tDVxgfAOK6uOPiASsgubo=
-github.com/go-sphere/confstore v0.0.2/go.mod h1:rvp2oSOW4x3E8JU0efD9JtHpBM2M3VIqM4rohoSMr34=
+github.com/go-sphere/confstore v0.0.3 h1:LRMRnEDu++JZGt4onMUHKAcQ27f+8qz553S7knIyHTE=
+github.com/go-sphere/confstore v0.0.3/go.mod h1:rvp2oSOW4x3E8JU0efD9JtHpBM2M3VIqM4rohoSMr34=
 github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
